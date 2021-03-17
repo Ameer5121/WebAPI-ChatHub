@@ -69,10 +69,11 @@ namespace ChattingHub.Controllers
                     Message = "User with that Email Address already exists",
                 };
             }
+
             db.RegisterUser(DBCommands.INSERTClient);
-            _logger.LogCritical($"User has registered an account." +
+            _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
-                $" \n            Password: {cred.DecryptedPassword}");
+                $"\n            Password: {cred.DecryptedPassword}");
             return new UserResponseModel
             {
                 ResponseCode = HttpStatusCode.Accepted,
@@ -84,10 +85,7 @@ namespace ChattingHub.Controllers
         [Route("PostMessage")]
         public void AddMessage(MessageModel message)
         {
-            if (message.Message != null && message.User.DisplayName != null)
-            {
-                _chathub.AddMessageData(message, _hubContext);
-            }
+            _chathub.AddMessageData(message, _hubContext);
         }
 
         [HttpGet]

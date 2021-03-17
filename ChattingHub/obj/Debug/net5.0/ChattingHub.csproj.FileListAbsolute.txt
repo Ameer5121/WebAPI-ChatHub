@@ -27,12 +27,6 @@ D:\Projects\Gits\WebSocketChat\WebSocketChat\ChattingHub\obj\Debug\net5.0\ref\Ch
 D:\Projects\Gits\WebSocketChat\WebSocketChat\ChattingHub\obj\Debug\net5.0\ChattingHub.pdb
 D:\Projects\Gits\WebSocketChat\WebSocketChat\ChattingHub\obj\Debug\net5.0\ChattingHub.csproj.CopyComplete
 D:\Projects\Gits\WebSocketChat\WebSocketChat\ChattingHub\obj\Debug\net5.0\ChattingHub.genruntimeconfig.cache
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.csprojAssemblyReference.cache
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.GeneratedMSBuildEditorConfig.editorconfig
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.AssemblyInfoInputs.cache
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.AssemblyInfo.cs
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.csproj.CoreCompileInputs.cache
-D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\User\Desktop\WebSocket Chat\net5.0\appsettings.Development.json
 C:\Users\User\Desktop\WebSocket Chat\net5.0\appsettings.json
 C:\Users\User\Desktop\WebSocket Chat\net5.0\ChattingHub.exe
@@ -42,7 +36,13 @@ C:\Users\User\Desktop\WebSocket Chat\net5.0\ChattingHub.runtimeconfig.dev.json
 C:\Users\User\Desktop\WebSocket Chat\net5.0\ChattingHub.dll
 C:\Users\User\Desktop\WebSocket Chat\net5.0\ref\ChattingHub.dll
 C:\Users\User\Desktop\WebSocket Chat\net5.0\ChattingHub.pdb
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.csprojAssemblyReference.cache
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.AssemblyInfoInputs.cache
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.AssemblyInfo.cs
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.csproj.CoreCompileInputs.cache
 D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.MvcApplicationPartsAssemblyInfo.cs
+D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\ChattingHub.MvcApplicationPartsAssemblyInfo.cache
 D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\staticwebassets\ChattingHub.StaticWebAssets.Manifest.cache
 D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\staticwebassets\ChattingHub.StaticWebAssets.xml
 D:\Projects\Gits\ChatHub\ChattingHub\obj\Debug\net5.0\scopedcss\bundle\ChattingHub.styles.css

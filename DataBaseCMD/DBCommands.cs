@@ -11,7 +11,7 @@ namespace DataBaseCMD
 {
      public sealed class DBCommands
      {
-        private const string _connection = "Server = 192.168.14.15; Database = clientinformation; Uid = DBC; Pwd = 123321soundisound";
+        private const string _connection = "";
         public static string SELECTUserAndPassword;
         public static string SELECTEmail;
         public static string SELECTDisplayName;

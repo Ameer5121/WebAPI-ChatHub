@@ -1,6 +1,7 @@
 using ChattingHub.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +26,6 @@ namespace ChattingHub
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -51,6 +51,11 @@ namespace ChattingHub
             {
                 endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapControllers();
+                endpoints.MapGet("/", async context =>
+                {
+                    await context.Response.WriteAsync("Worker Process Name : " +
+                        System.Diagnostics.Process.GetCurrentProcess().ProcessName);
+                });
             });
 
         }
