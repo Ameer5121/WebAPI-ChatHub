@@ -11,7 +11,6 @@ namespace ChattingHub.Hubs
     public class ChatHub : Hub
     {
         private static DataModel _usersAndMessages = new DataModel();
-        private static List<string> _connections = new List<string>();
   
         private void SendMessages(IHubContext<ChatHub> hub)
         {
@@ -29,18 +28,23 @@ namespace ChattingHub.Hubs
 
         public override Task OnConnectedAsync()
         {
+            _usersAndMessages.Users.LastOrDefault().ConnectionID = Context.ConnectionId;
             Clients.Caller.SendAsync("Connected", _usersAndMessages);
             Clients.Others.SendAsync("ReceiveData", _usersAndMessages);
-            _connections.Add(Context.ConnectionId);
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
             var disconnectedConnection = Context.ConnectionId;
-            var index = _connections.IndexOf(disconnectedConnection);
-            _connections.RemoveAt(index);
-            _usersAndMessages.Users.RemoveAt(index);
+            foreach(UserModel user in _usersAndMessages.Users)
+            {
+                if (user.ConnectionID == disconnectedConnection)
+                {
+                    _usersAndMessages.Users.Remove(user);
+                    break;
+                }
+            }
             Clients.All.SendAsync("ReceiveData", _usersAndMessages);
             return base.OnDisconnectedAsync(exception);
         }
