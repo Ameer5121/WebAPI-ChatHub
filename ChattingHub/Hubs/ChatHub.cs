@@ -14,12 +14,26 @@ namespace ChattingHub.Hubs
   
         private void SendMessages(IHubContext<ChatHub> hub)
         {
-            hub.Clients.All.SendAsync("ReceiveData", _usersAndMessages);
+            var currentMessage = _usersAndMessages.Messages.LastOrDefault();
+            if (currentMessage.DestinationUser != null)
+            {
+                hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveData", _usersAndMessages);
+                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveData", _usersAndMessages);
+            }
+            else
+            {
+                hub.Clients.All.SendAsync("ReceiveData", _usersAndMessages);
+            }        
         }
         public void AddUserData(UserModel data)
         {
             _usersAndMessages.Users.Add(data);
         }
+        /// <summary>
+        /// Stores the message data and sends them back out to the connected clients
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="hub"></param>
         public void AddMessageData(MessageModel data, IHubContext<ChatHub> hub)
         {
             _usersAndMessages.Messages.Add(data);
