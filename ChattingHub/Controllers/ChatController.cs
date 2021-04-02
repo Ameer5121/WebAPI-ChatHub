@@ -77,7 +77,6 @@ namespace ChattingHub.Controllers
             return new UserResponseModel
             {
                 ResponseCode = HttpStatusCode.Accepted,
-                Message = "Successfully Registered",
             };
         }
 
