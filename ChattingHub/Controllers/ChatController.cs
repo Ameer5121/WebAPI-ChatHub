@@ -20,6 +20,7 @@ namespace ChattingHub.Controllers
         private ILogger<ChatController> _logger;
         private ChatHub _chathub;
         private IHubContext<ChatHub> _hubContext;
+        private DBCommands dBCommands;
         public ChatController(ILogger<ChatController> logger, IHubContext<ChatHub> hubContext)
         {
             _logger = logger;
@@ -31,8 +32,8 @@ namespace ChattingHub.Controllers
         [Route("Login")]
         public UserResponseModel Login(UserCredentials cred)
         {
-            DBCommands db = new DBCommands(cred);
-            var userExists = db.FindUser(DBCommands.SELECTUserAndPassword);
+            dBCommands = new DBCommands(cred);
+            var userExists = dBCommands.UserExists(dBCommands.SELECTUserAndPassword);
             if (!userExists)
             {
                 return new UserResponseModel
@@ -43,7 +44,7 @@ namespace ChattingHub.Controllers
             }
             else
             {
-                var user = db.GetUser(DBCommands.SELECTDisplayName);
+                var user = dBCommands.GetUser(dBCommands.SELECTDisplayName);
                 _chathub.AddUserData(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 return new UserResponseModel
@@ -59,9 +60,10 @@ namespace ChattingHub.Controllers
         [Route("PostUser")]
         public UserResponseModel PostUser(UserCredentials cred)
         {
-            DBCommands db = new DBCommands(cred);
-            var userExists = db.FindUser(DBCommands.SELECTEmail);
-            if (userExists)
+            dBCommands = new DBCommands(cred);
+            var userWithEmailExists = dBCommands.UserExists(dBCommands.SELECTEmail);
+            var userNameExists = dBCommands.UserExists(dBCommands.SELECTUser);
+            if (userWithEmailExists)
             {
                 return new UserResponseModel
                 {
@@ -69,8 +71,16 @@ namespace ChattingHub.Controllers
                     Message = "User with that Email Address already exists",
                 };
             }
+            else if (userNameExists)
+            {
+                return new UserResponseModel
+                {
+                    ResponseCode = HttpStatusCode.BadRequest,
+                    Message = "UserName already exists",
+                };
+            }
 
-            db.RegisterUser(DBCommands.INSERTClient);
+            dBCommands.RegisterUser(dBCommands.INSERTClient);
             _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
                 $"\n            Password: {cred.DecryptedPassword}");

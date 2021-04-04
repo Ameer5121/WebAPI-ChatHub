@@ -12,10 +12,11 @@ namespace DataBaseCMD
      public sealed class DBCommands
      {
         private const string _connection = "";
-        public static string SELECTUserAndPassword;
-        public static string SELECTEmail;
-        public static string SELECTDisplayName;
-        public static string INSERTClient;
+        public string SELECTUserAndPassword { get; set; }
+        public string SELECTEmail { get; set; }
+        public string SELECTUser { get; set; }
+        public string SELECTDisplayName { get; set; }
+        public string INSERTClient { get; set; }
         private UserCredentials _userCredentials; 
         public DBCommands(UserCredentials cred)
         {
@@ -25,13 +26,15 @@ namespace DataBaseCMD
 
             SELECTEmail = $"SELECT email FROM clients WHERE email='{_userCredentials.Email}'";
 
+            SELECTUser = $"SELECT username FROM clients WHERE username='{_userCredentials.UserName}'";
+
             SELECTDisplayName = $"SELECT displayname FROM clients WHERE username='{_userCredentials.UserName}'" +
                 $" AND password='{_userCredentials.DecryptedPassword}'";
 
             INSERTClient = $"INSERT INTO clients VALUE(Default, '{cred.UserName}', '{cred.DecryptedPassword}', " +
                 $"'{cred.DisplayName}', '{cred.Email}')";
         }
-        public bool FindUser(string Command)
+        public bool UserExists(string Command)
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {
