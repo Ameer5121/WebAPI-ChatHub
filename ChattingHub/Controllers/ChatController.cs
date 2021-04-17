@@ -52,6 +52,7 @@ namespace ChattingHub.Controllers
                     ResponseCode = HttpStatusCode.OK,
                     Message = "Login was successful",
                     Payload = user
+                    
                 };
             }    
         }
