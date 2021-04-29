@@ -51,11 +51,6 @@ namespace ChattingHub
             {
                 endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapControllers();
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Worker Process Name : " +
-                        System.Diagnostics.Process.GetCurrentProcess().ProcessName);
-                });
             });
 
         }

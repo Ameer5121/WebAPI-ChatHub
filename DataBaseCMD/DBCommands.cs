@@ -17,7 +17,8 @@ namespace DataBaseCMD
         public string SELECTUser { get; set; }
         public string SELECTDisplayName { get; set; }
         public string INSERTClient { get; set; }
-        private UserCredentials _userCredentials; 
+        private UserCredentials _userCredentials;
+
         public DBCommands(UserCredentials cred)
         {
             _userCredentials = cred;
