@@ -47,10 +47,6 @@ namespace ChattingHub.Hubs
             var connectedUser = _usersAndMessages.Users.LastOrDefault();
             connectedUser.ConnectionID = Context.ConnectionId;
 
-            var x = _usersAndMessages.Messages.Where
-                (x => x.DestinationUser == connectedUser
-                || x.DestinationUser == null);
-
             Clients.Caller.SendAsync("Connected", new DataModel
             {
                 Users = _usersAndMessages.Users,
