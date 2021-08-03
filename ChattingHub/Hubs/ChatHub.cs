@@ -5,13 +5,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Models;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
+using ChattingHub.Helper.Extensions;
 
 namespace ChattingHub.Hubs
 {
     public class ChatHub : Hub
     {
         private static DataModel _usersAndMessages = new DataModel();
-  
+
         private void SendMessages(IHubContext<ChatHub> hub)
         {
             var currentMessage = _usersAndMessages.Messages.LastOrDefault();
@@ -23,7 +25,7 @@ namespace ChattingHub.Hubs
             else
             {
                 hub.Clients.All.SendAsync("ReceiveData", _usersAndMessages);
-            }        
+            }
         }
         public void AddUserData(UserModel data)
         {
@@ -42,16 +44,28 @@ namespace ChattingHub.Hubs
 
         public override Task OnConnectedAsync()
         {
-            _usersAndMessages.Users.LastOrDefault().ConnectionID = Context.ConnectionId;
-            Clients.Caller.SendAsync("Connected", _usersAndMessages);
-            Clients.Others.SendAsync("ReceiveData", _usersAndMessages);
+            var connectedUser = _usersAndMessages.Users.LastOrDefault();
+            connectedUser.ConnectionID = Context.ConnectionId;
+
+            var x = _usersAndMessages.Messages.Where
+                (x => x.DestinationUser == connectedUser
+                || x.DestinationUser == null);
+
+            Clients.Caller.SendAsync("Connected", new DataModel
+            {
+                Users = _usersAndMessages.Users,
+                Messages = _usersAndMessages.Messages.Where
+                (x => x.DestinationUser == connectedUser
+                || x.DestinationUser == null).ToObservableCollection()
+            });
+            Clients.Others.SendAsync("ReceiveData", new DataModel { Users = _usersAndMessages.Users});
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
             var disconnectedConnection = Context.ConnectionId;
-            foreach(UserModel user in _usersAndMessages.Users)
+            foreach (UserModel user in _usersAndMessages.Users)
             {
                 if (user.ConnectionID == disconnectedConnection)
                 {
