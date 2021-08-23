@@ -11,11 +11,11 @@ namespace DataBaseCMD
 {
      public sealed class DBCommands
      {
-        private const string _connection = "";
+        private const string _connection = "server=192.168.14.16;uid=DBC;pwd=123321dbcA;database=clientinformation";
         public string SELECTUserAndPassword { get; set; }
         public string SELECTEmail { get; set; }
+        public string SELECTUserName { get; set; }
         public string SELECTUser { get; set; }
-        public string SELECTDisplayName { get; set; }
         public string INSERTClient { get; set; }
         private UserCredentials _userCredentials;
 
@@ -27,9 +27,9 @@ namespace DataBaseCMD
 
             SELECTEmail = $"SELECT email FROM clients WHERE email='{_userCredentials.Email}'";
 
-            SELECTUser = $"SELECT username FROM clients WHERE username='{_userCredentials.UserName}'";
+            SELECTUserName = $"SELECT username FROM clients WHERE username='{_userCredentials.UserName}'";
 
-            SELECTDisplayName = $"SELECT displayname FROM clients WHERE username='{_userCredentials.UserName}'" +
+            SELECTUser = $"SELECT displayname, profilepicture FROM clients WHERE username='{_userCredentials.UserName}'" +
                 $" AND password='{_userCredentials.DecryptedPassword}'";
 
             INSERTClient = $"INSERT INTO clients VALUE(Default, '{cred.UserName}', '{cred.DecryptedPassword}', " +
@@ -41,7 +41,8 @@ namespace DataBaseCMD
             {
                 connection.Open();
                 MySqlCommand command = new MySqlCommand(Command, connection);
-                var user = command.ExecuteReader();          
+                var user = command.ExecuteReader();    
+                
                 if (user.HasRows)
                     return true;
             }

@@ -10,6 +10,8 @@ using Models;
 using DataBaseCMD;
 using System.Net.Http;
 using System.Net;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace ChattingHub.Controllers
 {
@@ -44,7 +46,7 @@ namespace ChattingHub.Controllers
             }
             else
             {
-                var user = dBCommands.GetUser(dBCommands.SELECTDisplayName);
+                var user = dBCommands.GetUser(dBCommands.SELECTUser);
                 _chathub.AddUserData(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 return new UserResponseModel
@@ -52,9 +54,9 @@ namespace ChattingHub.Controllers
                     ResponseCode = HttpStatusCode.OK,
                     Message = "Login was successful",
                     Payload = user
-                    
+
                 };
-            }    
+            }
         }
 
         [HttpPost]
@@ -63,7 +65,7 @@ namespace ChattingHub.Controllers
         {
             dBCommands = new DBCommands(cred);
             var userWithEmailExists = dBCommands.UserExists(dBCommands.SELECTEmail);
-            var userNameExists = dBCommands.UserExists(dBCommands.SELECTUser);
+            var userNameExists = dBCommands.UserExists(dBCommands.SELECTUserName);
             if (userWithEmailExists)
             {
                 return new UserResponseModel
@@ -98,6 +100,18 @@ namespace ChattingHub.Controllers
             _chathub.AddMessageData(message, _hubContext);
         }
 
+        [HttpPost]
+        [Route("PostImage")]
+        public async Task<string> UploadImage(ProfileImageDataModel profileImageDataModel)
+        {
+            var httpclient = new HttpClient();
+            httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "MYCLIENTID");
+            httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
+            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{profileImageDataModel.Base64ImageData}"));
+            var stringcontent = await response.Content.ReadAsStringAsync();
+            var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
+            return ImgurResponseModel.Data.Link;         
+        }
         [HttpGet]
         [Route("GetHeartBeat")]
         public string GetHeartBeat()

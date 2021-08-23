@@ -45,7 +45,7 @@ namespace ChattingHub.Hubs
         public override Task OnConnectedAsync()
         {
             var connectedUser = _usersAndMessages.Users.LastOrDefault();
-            connectedUser.ConnectionID = Context.ConnectionId;
+            connectedUser.ConnectionID = Context.ConnectionId; 
 
             Clients.Caller.SendAsync("Connected", new DataModel
             {
