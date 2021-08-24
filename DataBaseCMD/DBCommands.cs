@@ -11,19 +11,20 @@ namespace DataBaseCMD
 {
      public sealed class DBCommands
      {
-        private const string _connection = "server=192.168.14.16;uid=DBC;pwd=123321dbcA;database=clientinformation";
+        private const string _connection = "";
         public string SELECTUserAndPassword { get; set; }
         public string SELECTEmail { get; set; }
         public string SELECTUserName { get; set; }
         public string SELECTUser { get; set; }
         public string INSERTClient { get; set; }
+        public string UpdatePicture { get; set; }
         private UserCredentials _userCredentials;
 
         public DBCommands(UserCredentials cred)
         {
             _userCredentials = cred;
             SELECTUserAndPassword = $"SELECT username, password FROM clients WHERE username='{_userCredentials.UserName}'" +
-                $" AND password='{_userCredentials.DecryptedPassword}'";
+            $" AND password='{_userCredentials.DecryptedPassword}'";
 
             SELECTEmail = $"SELECT email FROM clients WHERE email='{_userCredentials.Email}'";
 
@@ -32,9 +33,14 @@ namespace DataBaseCMD
             SELECTUser = $"SELECT displayname, profilepicture FROM clients WHERE username='{_userCredentials.UserName}'" +
                 $" AND password='{_userCredentials.DecryptedPassword}'";
 
-            INSERTClient = $"INSERT INTO clients VALUE(Default, '{cred.UserName}', '{cred.DecryptedPassword}', " +
-                $"'{cred.DisplayName}', '{cred.Email}')";
+            INSERTClient = $"INSERT INTO clients (client_id,username,password,displayname,email) VALUE(Default, '{_userCredentials.UserName}', '{_userCredentials.DecryptedPassword}', " +
+                $"'{_userCredentials.DisplayName}', '{_userCredentials.Email}')";
         }
+        public DBCommands(UserModel userModel) 
+        {
+            UpdatePicture = $"UPDATE clients SET profilepicture = '{userModel.ProfilePicture}' WHERE displayname = '{userModel.DisplayName}' ";
+        }
+ 
         public bool UserExists(string Command)
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
@@ -59,7 +65,7 @@ namespace DataBaseCMD
             }
         }
 
-        public void RegisterUser(string Command)
+        public void ExecuteQuery(string Command)
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {

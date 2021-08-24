@@ -83,7 +83,7 @@ namespace ChattingHub.Controllers
                 };
             }
 
-            dBCommands.RegisterUser(dBCommands.INSERTClient);
+            dBCommands.ExecuteQuery(dBCommands.INSERTClient);
             _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
                 $"\n            Password: {cred.DecryptedPassword}");
@@ -107,9 +107,12 @@ namespace ChattingHub.Controllers
             var httpclient = new HttpClient();
             httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "MYCLIENTID");
             httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
-            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{profileImageDataModel.Base64ImageData}"));
+            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{profileImageDataModel.Base64ImageData}"));           
             var stringcontent = await response.Content.ReadAsStringAsync();
             var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
+            var userModel = _chathub.UpdateImage(ImgurResponseModel.Data.Link, profileImageDataModel.Uploader, _hubContext);
+            dBCommands = new DBCommands(userModel);
+            dBCommands.ExecuteQuery(dBCommands.UpdatePicture);
             return ImgurResponseModel.Data.Link;         
         }
         [HttpGet]

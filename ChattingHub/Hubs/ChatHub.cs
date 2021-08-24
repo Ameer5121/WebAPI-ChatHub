@@ -19,13 +19,22 @@ namespace ChattingHub.Hubs
             var currentMessage = _usersAndMessages.Messages.LastOrDefault();
             if (currentMessage.DestinationUser != null)
             {
-                hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveData", _usersAndMessages);
-                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveData", _usersAndMessages);
+                hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveMessages", _usersAndMessages.Messages);
+                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveMessages", _usersAndMessages.Messages);
             }
             else
             {
-                hub.Clients.All.SendAsync("ReceiveData", _usersAndMessages);
+                hub.Clients.All.SendAsync("ReceiveMessages", _usersAndMessages.Messages);
             }
+        }
+
+        private void SendUsers(IHubContext<ChatHub> hub)
+        {
+            hub.Clients.All.SendAsync("ReceiveUsers", _usersAndMessages.Users);
+        }
+        private void SendUsers()
+        {
+            Clients.Others.SendAsync("ReceiveUsers", _usersAndMessages.Users);
         }
         public void AddUserData(UserModel data)
         {
@@ -42,6 +51,14 @@ namespace ChattingHub.Hubs
             SendMessages(hub);
         }
 
+        public UserModel UpdateImage(string imageLink, UserModel user, IHubContext<ChatHub> hub)
+        {
+            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == user.ConnectionID);
+            userModel.ProfilePicture = imageLink;
+            SendUsers(hub);
+            return userModel;
+        }
+
         public override Task OnConnectedAsync()
         {
             var connectedUser = _usersAndMessages.Users.LastOrDefault();
@@ -54,7 +71,7 @@ namespace ChattingHub.Hubs
                 (x => x.DestinationUser == connectedUser
                 || x.DestinationUser == null).ToObservableCollection()
             });
-            Clients.Others.SendAsync("ReceiveData", new DataModel { Users = _usersAndMessages.Users});
+            SendUsers();
             return base.OnConnectedAsync();
         }
 
@@ -69,7 +86,7 @@ namespace ChattingHub.Hubs
                     break;
                 }
             }
-            Clients.All.SendAsync("ReceiveData", _usersAndMessages);
+            SendUsers();            
             return base.OnDisconnectedAsync(exception);
         }
     }
