@@ -35,8 +35,8 @@ namespace ChattingHub.Controllers
         public UserResponseModel Login(UserCredentials cred)
         {
             dBCommands = new DBCommands(cred);
-            var userExists = dBCommands.UserExists(dBCommands.SELECTUserAndPassword);
-            if (!userExists)
+            var credentialsExist = dBCommands.CredentialsExist();
+            if (!credentialsExist)
             {
                 return new UserResponseModel
                 {
@@ -46,7 +46,7 @@ namespace ChattingHub.Controllers
             }
             else
             {
-                var user = dBCommands.GetUser(dBCommands.SELECTUser);
+                var user = dBCommands.GetUser();
                 _chathub.AddUserData(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 return new UserResponseModel
@@ -54,7 +54,6 @@ namespace ChattingHub.Controllers
                     ResponseCode = HttpStatusCode.OK,
                     Message = "Login was successful",
                     Payload = user
-
                 };
             }
         }
@@ -64,9 +63,9 @@ namespace ChattingHub.Controllers
         public UserResponseModel PostUser(UserCredentials cred)
         {
             dBCommands = new DBCommands(cred);
-            var userWithEmailExists = dBCommands.UserExists(dBCommands.SELECTEmail);
-            var userNameExists = dBCommands.UserExists(dBCommands.SELECTUserName);
-            if (userWithEmailExists)
+            var emailExists = dBCommands.EmailExists();
+            var userNameExists = dBCommands.UserNameExists();
+            if (emailExists)
             {
                 return new UserResponseModel
                 {
@@ -83,7 +82,7 @@ namespace ChattingHub.Controllers
                 };
             }
 
-            dBCommands.ExecuteQuery(dBCommands.INSERTClient);
+            dBCommands.InsertClient();
             _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
                 $"\n            Password: {cred.DecryptedPassword}");
@@ -105,15 +104,20 @@ namespace ChattingHub.Controllers
         public async Task<string> UploadImage(ProfileImageDataModel profileImageDataModel)
         {
             var httpclient = new HttpClient();
-            httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "MYCLIENTID");
+            httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "");
             httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
             var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{profileImageDataModel.Base64ImageData}"));           
             var stringcontent = await response.Content.ReadAsStringAsync();
             var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
-            var userModel = _chathub.UpdateImage(ImgurResponseModel.Data.Link, profileImageDataModel.Uploader, _hubContext);
+            ChangeProfilePicture(ImgurResponseModel, profileImageDataModel);
+            return ImgurResponseModel.Data.Link;
+        }
+
+        private void ChangeProfilePicture(ImgurResponseModel imgurResponseModel, ProfileImageDataModel profileImageDataModel)
+        {
+            var userModel = _chathub.UpdateImage(imgurResponseModel.Data.Link, profileImageDataModel.Uploader, _hubContext);
             dBCommands = new DBCommands(userModel);
-            dBCommands.ExecuteQuery(dBCommands.UpdatePicture);
-            return ImgurResponseModel.Data.Link;         
+            dBCommands.UpdateProfilePicture();
         }
         [HttpGet]
         [Route("GetHeartBeat")]

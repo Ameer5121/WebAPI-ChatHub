@@ -9,70 +9,104 @@ using System.Data.Common;
 
 namespace DataBaseCMD
 {
-     public sealed class DBCommands
-     {
+    public sealed class DBCommands
+    {
         private const string _connection = "";
-        public string SELECTUserAndPassword { get; set; }
-        public string SELECTEmail { get; set; }
-        public string SELECTUserName { get; set; }
-        public string SELECTUser { get; set; }
-        public string INSERTClient { get; set; }
-        public string UpdatePicture { get; set; }
+        private string SELECTUserNameAndPassword;
+        private string SELECTEmail;
+        private string SELECTUserName;
+        private string SELECTUser;
+        private string INSERTClient;
+        private string UpdatePicture;
         private UserCredentials _userCredentials;
+        private UserModel _userModel;
 
         public DBCommands(UserCredentials cred)
         {
             _userCredentials = cred;
-            SELECTUserAndPassword = $"SELECT username, password FROM clients WHERE username='{_userCredentials.UserName}'" +
-            $" AND password='{_userCredentials.DecryptedPassword}'";
+            SELECTUserNameAndPassword = $"SELECT username, password FROM clients WHERE username = @UserName AND password = @Password";
 
-            SELECTEmail = $"SELECT email FROM clients WHERE email='{_userCredentials.Email}'";
+            SELECTEmail = $"SELECT email FROM clients WHERE email = @Email";
 
-            SELECTUserName = $"SELECT username FROM clients WHERE username='{_userCredentials.UserName}'";
+            SELECTUserName = $"SELECT username FROM clients WHERE username = @UserName";
 
-            SELECTUser = $"SELECT displayname, profilepicture FROM clients WHERE username='{_userCredentials.UserName}'" +
-                $" AND password='{_userCredentials.DecryptedPassword}'";
+            SELECTUser = $"SELECT displayname, profilepicture FROM clients WHERE username = @UserName" +
+                $" AND password = @Password";
 
-            INSERTClient = $"INSERT INTO clients (client_id,username,password,displayname,email) VALUE(Default, '{_userCredentials.UserName}', '{_userCredentials.DecryptedPassword}', " +
-                $"'{_userCredentials.DisplayName}', '{_userCredentials.Email}')";
+            INSERTClient = $"INSERT INTO clients (client_id,username,password,displayname,email) VALUE(Default, @UserName, @Password, @DisplayName, @Email)";
         }
-        public DBCommands(UserModel userModel) 
+        public DBCommands(UserModel userModel)
         {
-            UpdatePicture = $"UPDATE clients SET profilepicture = '{userModel.ProfilePicture}' WHERE displayname = '{userModel.DisplayName}' ";
+            _userModel = userModel;
+            UpdatePicture = $"UPDATE clients SET profilepicture = @ProfilePicture WHERE displayname = @DisplayName ";
         }
- 
-        public bool UserExists(string Command)
+
+        public bool CredentialsExist()
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {
+                var parameters = new { UserName = _userCredentials.UserName, Password = _userCredentials.DecryptedPassword };
                 connection.Open();
-                MySqlCommand command = new MySqlCommand(Command, connection);
-                var user = command.ExecuteReader();    
-                
+                var user = connection.ExecuteReader(SELECTUserNameAndPassword, parameters);
+                return user.Read();
+            }
+        }
+
+        public bool EmailExists()
+        {
+            using (MySqlConnection connection = new MySqlConnection(_connection))
+            {
+                var parameters = new { Email = _userCredentials.Email };
+                connection.Open();
+                var user = connection.ExecuteReader(SELECTEmail, parameters) as MySqlDataReader;
+                if (user.HasRows)
+                    return true;
+            }
+            return false;
+        }
+        public bool UserNameExists()
+        {
+            using (MySqlConnection connection = new MySqlConnection(_connection))
+            {
+                var parameters = new { UserName = _userCredentials.UserName };
+                connection.Open();
+                var user = connection.ExecuteReader(SELECTUserName, parameters) as MySqlDataReader;
                 if (user.HasRows)
                     return true;
             }
             return false;
         }
 
-        public UserModel GetUser(string Command)
+        public UserModel GetUser()
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {
+                var parameters = new { UserName = _userCredentials.UserName, Password = _userCredentials.DecryptedPassword };              
                 connection.Open();
-                var user = connection.Query<UserModel>(Command).AsList();
+                var user = connection.Query<UserModel>(SELECTUser, parameters).AsList();
                 return user[0];
             }
         }
 
-        public void ExecuteQuery(string Command)
+        public void UpdateProfilePicture()
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {
+                var parameters = new { DisplayName = _userModel.DisplayName, ProfilePicture = _userModel.ProfilePicture };
                 connection.Open();
-                connection.Execute(Command);
+                connection.Execute(UpdatePicture, parameters);
             }
         }
 
-     }
+        public void InsertClient()
+        {
+            using (MySqlConnection connection = new MySqlConnection(_connection))
+            {
+                var parameters = new { UserName = _userCredentials.UserName, Password = _userCredentials.DecryptedPassword, DisplayName = _userCredentials.DisplayName, Email = _userCredentials.Email };
+                connection.Open();
+                connection.Execute(INSERTClient, parameters);
+            }
+        }
+
+    }
 }
