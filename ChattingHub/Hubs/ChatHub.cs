@@ -68,7 +68,7 @@ namespace ChattingHub.Hubs
             {
                 Users = _usersAndMessages.Users,
                 Messages = _usersAndMessages.Messages.Where
-                (x => x?.DestinationUser.DisplayName == connectedUser.DisplayName
+                (x => x.DestinationUser?.DisplayName == connectedUser.DisplayName
                 || x.DestinationUser == null).ToObservableCollection()
             });
             SendUsers();
