@@ -33,7 +33,7 @@ namespace DataBaseCMD
             SELECTUser = $"SELECT displayname, profilepicture FROM clients WHERE username = @UserName" +
                 $" AND password = @Password";
 
-            INSERTClient = $"INSERT INTO clients (client_id,username,password,displayname,email) VALUE(Default, @UserName, @Password, @DisplayName, @Email)";
+            INSERTClient = $"INSERT INTO clients (client_id,username,password,displayname,email,profilepicture) VALUE(Default, @UserName, @Password, @DisplayName, @Email, @ProfilePicture)";
         }
         public DBCommands(UserModel userModel)
         {
@@ -58,11 +58,9 @@ namespace DataBaseCMD
             {
                 var parameters = new { Email = _userCredentials.Email };
                 connection.Open();
-                var user = connection.ExecuteReader(SELECTEmail, parameters) as MySqlDataReader;
-                if (user.HasRows)
-                    return true;
+                var user = connection.ExecuteReader(SELECTEmail, parameters);
+               return user.Read();
             }
-            return false;
         }
         public bool UserNameExists()
         {
@@ -70,11 +68,9 @@ namespace DataBaseCMD
             {
                 var parameters = new { UserName = _userCredentials.UserName };
                 connection.Open();
-                var user = connection.ExecuteReader(SELECTUserName, parameters) as MySqlDataReader;
-                if (user.HasRows)
-                    return true;
+                var user = connection.ExecuteReader(SELECTUserName, parameters);
+                return user.Read();
             }
-            return false;
         }
 
         public UserModel GetUser()
@@ -102,7 +98,8 @@ namespace DataBaseCMD
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {
-                var parameters = new { UserName = _userCredentials.UserName, Password = _userCredentials.DecryptedPassword, DisplayName = _userCredentials.DisplayName, Email = _userCredentials.Email };
+                var parameters = new { UserName = _userCredentials.UserName, Password = _userCredentials.DecryptedPassword, DisplayName = _userCredentials.DisplayName, 
+                    Email = _userCredentials.Email, ProfilePicture = "https://imgur.com/Jn29VzN.jpg"};
                 connection.Open();
                 connection.Execute(INSERTClient, parameters);
             }
