@@ -51,12 +51,17 @@ namespace ChattingHub.Hubs
             SendMessages(hub);
         }
 
-        public UserModel UpdateImage(string imageLink, UserModel user, IHubContext<ChatHub> hub)
+        public void UpdateImage(ProfileImageUploadDataModel profileImageDataModel, IHubContext<ChatHub> hub)
         {
-            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == user.ConnectionID);
-            userModel.ProfilePicture = imageLink;
+            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == profileImageDataModel.Uploader.ConnectionID);
+            userModel.ProfilePicture = profileImageDataModel.Link;
             SendUsers(hub);
-            return userModel;
+        }
+        public void UpdateName(NameChangeModel nameChangeModel, IHubContext<ChatHub> hub)
+        {
+            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == nameChangeModel.User.ConnectionID);
+            userModel.DisplayName = nameChangeModel.NewName;
+            SendUsers(hub);
         }
 
         public override Task OnConnectedAsync()

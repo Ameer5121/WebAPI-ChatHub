@@ -27,6 +27,7 @@ namespace ChattingHub.Controllers
         {
             _logger = logger;
             _hubContext = hubContext;
+            dBCommands = new DBCommands();
             _chathub = new ChatHub();
         }
 
@@ -34,8 +35,7 @@ namespace ChattingHub.Controllers
         [Route("Login")]
         public UserResponseModel Login(UserCredentials cred)
         {
-            dBCommands = new DBCommands(cred);
-            var credentialsExist = dBCommands.CredentialsExist();
+            var credentialsExist = dBCommands.CredentialsExist(cred);
             if (!credentialsExist)
             {
                 return new UserResponseModel
@@ -46,7 +46,7 @@ namespace ChattingHub.Controllers
             }
             else
             {
-                var user = dBCommands.GetUser();
+                var user = dBCommands.GetUser(cred);
                 _chathub.AddUserData(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 return new UserResponseModel
@@ -62,9 +62,8 @@ namespace ChattingHub.Controllers
         [Route("PostUser")]
         public UserResponseModel PostUser(UserCredentials cred)
         {
-            dBCommands = new DBCommands(cred);
-            var emailExists = dBCommands.EmailExists();
-            var userNameExists = dBCommands.UserNameExists();
+            var emailExists = dBCommands.EmailExists(cred);
+            var userNameExists = dBCommands.UserNameExists(cred);
             if (emailExists)
             {
                 return new UserResponseModel
@@ -82,7 +81,7 @@ namespace ChattingHub.Controllers
                 };
             }
 
-            dBCommands.InsertClient();
+            dBCommands.InsertClient(cred);
             _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
                 $"\n            Password: {cred.DecryptedPassword}");
@@ -101,23 +100,30 @@ namespace ChattingHub.Controllers
 
         [HttpPost]
         [Route("PostImage")]
-        public async Task<string> UploadImage(ProfileImageDataModel profileImageDataModel)
+        public async Task<string> UploadImage(ImageUploadDataModel imageUploadDataModel)
         {
             var httpclient = new HttpClient();
             httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "");
             httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
-            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{profileImageDataModel.Base64ImageData}"));           
+            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{imageUploadDataModel.Base64ImageData}"));
             var stringcontent = await response.Content.ReadAsStringAsync();
             var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
-            ChangeProfilePicture(ImgurResponseModel, profileImageDataModel);
+            ChangeProfilePicture(new ProfileImageUploadDataModel(imageUploadDataModel.Uploader, ImgurResponseModel.Data.Link));
             return ImgurResponseModel.Data.Link;
         }
 
-        private void ChangeProfilePicture(ImgurResponseModel imgurResponseModel, ProfileImageDataModel profileImageDataModel)
+        [HttpPost]
+        [Route("PostName")]
+        public void UpdateName(NameChangeModel nameChangeModel)
         {
-            var userModel = _chathub.UpdateImage(imgurResponseModel.Data.Link, profileImageDataModel.Uploader, _hubContext);
-            dBCommands = new DBCommands(userModel);
-            dBCommands.UpdateProfilePicture();
+            dBCommands.UpdateDisplayName(nameChangeModel);
+            _chathub.UpdateName(nameChangeModel, _hubContext);
+        }
+
+        private void ChangeProfilePicture(ProfileImageUploadDataModel profileImageUploadDataModel)
+        {
+            dBCommands.UpdateProfilePicture(profileImageUploadDataModel);
+            _chathub.UpdateImage(profileImageUploadDataModel, _hubContext);
         }
         [HttpGet]
         [Route("GetHeartBeat")]
