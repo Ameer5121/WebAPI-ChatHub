@@ -96,6 +96,7 @@ namespace ChattingHub.Controllers
         public void AddMessage(MessageModel message)
         {
             _chathub.AddMessageData(message, _hubContext);
+            
         }
 
         [HttpPost]
