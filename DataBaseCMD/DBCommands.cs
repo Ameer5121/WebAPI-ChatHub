@@ -30,7 +30,7 @@ namespace DataBaseCMD
                 var parameters = new { UserName = userCredentials.UserName};
                 connection.Open();
                 var hashedPassword = connection.ExecuteScalar(SELECTPassword, parameters);
-                return EncryptionService.VerifyPassword(userCredentials, hashedPassword as string);                
+                return hashedPassword == null ? false : EncryptionService.VerifyPassword(userCredentials, hashedPassword as string);                
             }
         }
 
