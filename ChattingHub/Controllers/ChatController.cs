@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Net;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using ChattingHub.Services;
 
 namespace ChattingHub.Controllers
 {
@@ -22,20 +23,22 @@ namespace ChattingHub.Controllers
         private ILogger<ChatController> _logger;
         private ChatHub _chathub;
         private IHubContext<ChatHub> _hubContext;
-        private DBCommands dBCommands;
-        public ChatController(ILogger<ChatController> logger, IHubContext<ChatHub> hubContext)
+        private DBCommands _dBCommands;
+        private EmailService _emailService;
+        public ChatController(ILogger<ChatController> logger, IHubContext<ChatHub> hubContext, EmailService emailService)
         {
             _logger = logger;
             _hubContext = hubContext;
-            dBCommands = new DBCommands();
+            _dBCommands = new DBCommands();
             _chathub = new ChatHub();
+            _emailService = emailService;           
         }
 
         [HttpPost]
         [Route("Login")]
         public UserResponseModel Login(UserCredentials cred)
         {
-            var credentialsExist = dBCommands.CredentialsExist(cred);
+            var credentialsExist = _dBCommands.CredentialsExist(cred);
             if (!credentialsExist)
             {
                 return new UserResponseModel
@@ -46,7 +49,7 @@ namespace ChattingHub.Controllers
             }
             else
             {
-                var user = dBCommands.GetUser(cred);
+                var user = _dBCommands.GetUser(cred.UserName);
                 _chathub.AddUserData(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 return new UserResponseModel
@@ -62,8 +65,8 @@ namespace ChattingHub.Controllers
         [Route("PostUser")]
         public UserResponseModel PostUser(UserCredentials cred)
         {
-            var emailExists = dBCommands.EmailExists(cred);
-            var userNameExists = dBCommands.UserNameExists(cred);
+            var emailExists = _dBCommands.EmailExists(cred.Email);
+            var userNameExists = _dBCommands.UserNameExists(cred.UserName);
             if (emailExists)
             {
                 return new UserResponseModel
@@ -81,7 +84,7 @@ namespace ChattingHub.Controllers
                 };
             }
 
-            dBCommands.InsertClient(cred);
+            _dBCommands.InsertClient(cred);
             _logger.LogInformation($"User has registered an account." +
                 $"\n            Username: {cred.UserName}" +
                 $"\n            Password: {cred.DecryptedPassword}");
@@ -96,7 +99,6 @@ namespace ChattingHub.Controllers
         public void AddMessage(MessageModel message)
         {
             _chathub.AddMessageData(message, _hubContext);
-            
         }
 
         [HttpPost]
@@ -117,13 +119,26 @@ namespace ChattingHub.Controllers
         [Route("PostName")]
         public void UpdateName(NameChangeModel nameChangeModel)
         {
-            dBCommands.UpdateDisplayName(nameChangeModel);
+            _dBCommands.UpdateDisplayName(nameChangeModel);
             _chathub.UpdateName(nameChangeModel, _hubContext);
+        }
+
+        [HttpPost]
+        [Route("PostEmail")]
+        public async Task<string> SendEmail([FromBody]string email)
+        {
+            if (!_dBCommands.EmailExists(email))
+            {
+                Response.StatusCode = 404;
+                return "Email not found!";
+            }
+            await _emailService.SendEmail(email);
+            return "Email Sent!";
         }
 
         private void ChangeProfilePicture(ProfileImageUploadDataModel profileImageUploadDataModel)
         {
-            dBCommands.UpdateProfilePicture(profileImageUploadDataModel);
+            _dBCommands.UpdateProfilePicture(profileImageUploadDataModel);
             _chathub.UpdateImage(profileImageUploadDataModel, _hubContext);
         }
         [HttpGet]

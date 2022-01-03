@@ -1,4 +1,5 @@
 using ChattingHub.Hubs;
+using ChattingHub.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +34,7 @@ namespace ChattingHub
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChattingHub", Version = "v1" });
             });
             services.AddSignalR();
+            services.AddSingleton(typeof(EmailService));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
