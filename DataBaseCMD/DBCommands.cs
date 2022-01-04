@@ -66,7 +66,7 @@ namespace DataBaseCMD
             }
         }
 
-        public void UpdateProfilePicture(ProfileImageUploadDataModel profileImageDataModel)
+        public void UpdateProfilePicture(ImageUploaderModel profileImageDataModel)
         {
             using (MySqlConnection connection = new MySqlConnection(_connection))
             {

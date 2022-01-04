@@ -7,8 +7,14 @@ namespace Models
 {
     public class UserResponseModel
     {
-        public HttpStatusCode ResponseCode { get; set; } 
-        public string Message { get; set; } 
-        public UserModel Payload { get; set; }
+        public string Message { get; } 
+        public UserModel Payload { get;}
+
+        public UserResponseModel(string message) => Message = message;
+        public UserResponseModel(string message, UserModel payLoad)
+        {
+            Message = message;
+            Payload = payLoad;
+        }
     }
 }

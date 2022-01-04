@@ -51,7 +51,7 @@ namespace ChattingHub.Hubs
             SendMessages(hub);
         }
 
-        public void UpdateImage(ProfileImageUploadDataModel profileImageDataModel, IHubContext<ChatHub> hub)
+        public void UpdateImage(ImageUploaderModel profileImageDataModel, IHubContext<ChatHub> hub)
         {
             var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == profileImageDataModel.Uploader.ConnectionID);
             userModel.ProfilePicture = profileImageDataModel.Link;

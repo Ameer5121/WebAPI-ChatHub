@@ -4,12 +4,12 @@ using System.Text;
 
 namespace Models
 {
-    public class ProfileImageUploadDataModel
+    public class ImageUploaderModel
     {
         public UserModel Uploader { get; set; }
         public string Link { get; set; }
 
-        public ProfileImageUploadDataModel(UserModel uploader, string link)
+        public ImageUploaderModel(UserModel uploader, string link)
         {
             Uploader = uploader;
             Link = link;

@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Models
 {
-    public class ImageUploadDataModel
+    public class ProfileImageDataModel
     {
         public string Base64ImageData { get; set; }
         public UserModel Uploader { get; set; }
-        public ImageUploadDataModel(string base64ImageData, UserModel uploader)
+        public ProfileImageDataModel(string base64ImageData, UserModel uploader)
         {
             Base64ImageData = base64ImageData;
             Uploader = uploader;
