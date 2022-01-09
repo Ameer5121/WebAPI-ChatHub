@@ -13,6 +13,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using ChattingHub.Services;
+using ChattingHub.Helper.Exceptions;
 
 namespace ChattingHub.Controllers
 {
@@ -119,6 +120,26 @@ namespace ChattingHub.Controllers
             await _emailService.SendEmail(email);
             return "Email Sent!";
         }
+
+        [HttpPost]
+        [Route("PostCode")]
+        public string VerifyCode(VerificationModel verificationModel)
+        {
+            try
+            {
+                _emailService.VerifyCode(verificationModel);
+            }
+            catch (VerificationException e)
+            {
+                Response.StatusCode = (int)HttpStatusCode.NotFound;
+                return e.Message;
+            }
+            return "Code verified.";
+        }
+
+        [HttpPost]
+        [Route("PostPassword")]
+        public void UpdatePassword(PasswordChangeModel passwordChangeModel) => _dBCommands.UpdatePassword(passwordChangeModel);
 
         private void ChangeProfilePicture(ImageUploaderModel profileImageUploadDataModel)
         {

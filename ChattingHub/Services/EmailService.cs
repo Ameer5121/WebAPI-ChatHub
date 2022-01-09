@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ChattingHub.Helper.Exceptions;
+using Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,7 +19,7 @@ namespace ChattingHub.Services
             _smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("EMAIL", "PASSWORD"),
+                Credentials = new NetworkCredential("", ""),
                 EnableSsl = true,
             };
         }
@@ -25,7 +27,7 @@ namespace ChattingHub.Services
         {
             var codeGenerator = new Random();
             var code = codeGenerator.Next(100000, 999999);
-            MailAddress from = new MailAddress("EMAIL");
+            MailAddress from = new MailAddress("");
             MailAddress to = new MailAddress(receipent);
             MailMessage message = new MailMessage(from, to);
             message.Subject = "Verification Code";
@@ -37,6 +39,11 @@ namespace ChattingHub.Services
         {
             if (_recoveryEmails.ContainsValue(receipent)) foreach (var value in _recoveryEmails.Where(x => x.Value == receipent)) _recoveryEmails.Remove(value.Key);
             _recoveryEmails.Add(code, receipent);
+        }
+
+        public void VerifyCode(VerificationModel verificationModel)
+        {
+            if (!_recoveryEmails.TryGetValue(verificationModel.Code, out var email) || email != verificationModel.Email) throw new VerificationException("Invalid Code");
         }
  
     }
