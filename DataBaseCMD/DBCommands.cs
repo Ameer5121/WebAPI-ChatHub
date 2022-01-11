@@ -41,14 +41,14 @@ namespace DataBaseCMD
         public bool EmailExists(string email)
         {
             var parameters = new { Email = email };
-            var user = _sqlConnection.ExecuteReader(SELECTEmailStatement, parameters);
-            return user.Read();
+            using (var user = _sqlConnection.ExecuteReader(SELECTEmailStatement, parameters))
+                return user.Read();
         }
         public bool UserNameExists(string userName)
         {
             var parameters = new { UserName = userName };
-            var user = _sqlConnection.ExecuteReader(SELECTUserNameStatement, parameters);
-            return user.Read();
+            using (var user = _sqlConnection.ExecuteReader(SELECTUserNameStatement, parameters))
+                return user.Read();
         }
 
         public UserModel GetUser(string userName)
