@@ -12,33 +12,45 @@ namespace ChattingHub.Hubs
 {
     public class ChatHub : Hub
     {
-        private static DataModel _usersAndMessages = new DataModel();
-
-        private void SendMessages(IHubContext<ChatHub> hub)
+        public static DataModel Data { get; } = new DataModel();
+        private void SendNewMessages(IHubContext<ChatHub> hub)
         {
-            var currentMessage = _usersAndMessages.Messages.LastOrDefault();
+            var currentMessage = Data.Messages.LastOrDefault();
             if (currentMessage.DestinationUser != null)
             {
-                hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveMessages", _usersAndMessages.Messages);
-                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveMessages", _usersAndMessages.Messages);
+                hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveMessages", Data.Messages);
+                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveMessages", Data.Messages);
             }
             else
             {
-                hub.Clients.All.SendAsync("ReceiveMessages", _usersAndMessages.Messages);
+                hub.Clients.All.SendAsync("ReceiveMessages", Data.Messages);
             }
         }
 
+        public void SendPreviousPublicMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
+        {
+            var previousMessages = Data.Messages.Where(x => x.DestinationUser == null &&
+            x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate);
+            Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
+            Data.UnLoadedMessagesIntervalModels.Remove(unLoadedMessagesInterval);
+        }
+        public void SendPreviousPrivateMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
+        {
+            var previousMessages = Data.Messages.Where(x => x.DestinationUser?.DisplayName == unLoadedMessagesInterval.To.DisplayName
+            
+                            || x.User.DisplayName == unLoadedMessagesInterval.To.DisplayName
+                            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.From.DisplayName &&
+            x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate).ToObservableCollection();
+            Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
+            Data.UnLoadedMessagesIntervalModels.Remove(unLoadedMessagesInterval);
+        }
         private void SendUsers(IHubContext<ChatHub> hub)
         {
-            hub.Clients.All.SendAsync("ReceiveUsers", _usersAndMessages.Users);
+            hub.Clients.All.SendAsync("ReceiveUsers", Data.Users);
         }
         private void SendUsers()
         {
-            Clients.Others.SendAsync("ReceiveUsers", _usersAndMessages.Users);
-        }
-        public void AddUserData(UserModel data)
-        {
-            _usersAndMessages.Users.Add(data);
+            Clients.Others.SendAsync("ReceiveUsers", Data.Users);
         }
         /// <summary>
         /// Stores the message data and sends them back out to the connected clients
@@ -47,35 +59,42 @@ namespace ChattingHub.Hubs
         /// <param name="hub"></param>
         public void AddMessageData(MessageModel data, IHubContext<ChatHub> hub)
         {
-            _usersAndMessages.Messages.Add(data);
-            SendMessages(hub);
+            Data.Messages.Add(data);
+            SendNewMessages(hub);
         }
 
         public void UpdateImage(ImageUploaderModel profileImageDataModel, IHubContext<ChatHub> hub)
         {
-            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == profileImageDataModel.Uploader.ConnectionID);
+            var userModel = Data.Users.Single(x => x.ConnectionID == profileImageDataModel.Uploader.ConnectionID);
             userModel.ProfilePicture = profileImageDataModel.Link;
             SendUsers(hub);
         }
         public void UpdateName(NameChangeModel nameChangeModel, IHubContext<ChatHub> hub)
         {
-            var userModel = _usersAndMessages.Users.Single(x => x.ConnectionID == nameChangeModel.User.ConnectionID);
+            var userModel = Data.Users.Single(x => x.ConnectionID == nameChangeModel.User.ConnectionID);
             userModel.DisplayName = nameChangeModel.NewName;
             SendUsers(hub);
         }
 
         public override Task OnConnectedAsync()
         {
-            var connectedUser = _usersAndMessages.Users.LastOrDefault();
-            connectedUser.ConnectionID = Context.ConnectionId; 
+            var connectedUser = Data.Users.LastOrDefault();
+            connectedUser.ConnectionID = Context.ConnectionId;
 
-            Clients.Caller.SendAsync("Connected", new DataModel
-            {
-                Users = _usersAndMessages.Users,
-                Messages = _usersAndMessages.Messages.Where
+            //Filter out messages we want to send
+            var messages = Data.Messages.Where
                 (x => x.DestinationUser?.DisplayName == connectedUser.DisplayName
-                || x.DestinationUser != null && x.User.DisplayName == connectedUser.DisplayName || x.DestinationUser == null).ToObservableCollection()
-            });
+                || x.DestinationUser != null && x.User.DisplayName == connectedUser.DisplayName || x.DestinationUser == null).ToObservableCollection();
+            if (messages.Count >= 10) messages = messages.Skip(messages.Count - 5).ToObservableCollection();
+
+            List<UnLoadedMessagesIntervalModel> unLoadedMessagesIntervals = Data.UnLoadedMessagesIntervalModels;
+              if(Data.UnLoadedMessagesIntervalModels.Count != 0)
+                unLoadedMessagesIntervals = Data.UnLoadedMessagesIntervalModels.Where
+                (x => x.To?.DisplayName == connectedUser.DisplayName
+                || x.To != null && x.From.DisplayName == connectedUser.DisplayName || x.To == null).ToList();
+
+
+            Clients.Caller.SendAsync("Connected", new DataModel(messages, Data.Users, unLoadedMessagesIntervals));
             SendUsers();
             return base.OnConnectedAsync();
         }
@@ -83,11 +102,11 @@ namespace ChattingHub.Hubs
         public override Task OnDisconnectedAsync(Exception exception)
         {
             var disconnectedConnection = Context.ConnectionId;
-            foreach (UserModel user in _usersAndMessages.Users)
+            foreach (UserModel user in Data.Users)
             {
                 if (user.ConnectionID == disconnectedConnection)
                 {
-                    _usersAndMessages.Users.Remove(user);
+                    Data.Users.Remove(user);
                     break;
                 }
             }

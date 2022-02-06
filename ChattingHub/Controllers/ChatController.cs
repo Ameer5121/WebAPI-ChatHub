@@ -22,16 +22,14 @@ namespace ChattingHub.Controllers
     public class ChatController : ControllerBase
     {
         private ILogger<ChatController> _logger;
-        private ChatHub _chathub;
+        private static ChatHub _chathub = new ChatHub();
+        private static DBCommands _dBCommands = new DBCommands();
         private IHubContext<ChatHub> _hubContext;
-        private DBCommands _dBCommands;
         private EmailService _emailService;
         public ChatController(ILogger<ChatController> logger, IHubContext<ChatHub> hubContext, EmailService emailService)
         {
             _logger = logger;
             _hubContext = hubContext;
-            _dBCommands = new DBCommands();
-            _chathub = new ChatHub();
             _emailService = emailService;
         }
 
@@ -48,10 +46,11 @@ namespace ChattingHub.Controllers
             else
             {
                 var user = _dBCommands.GetUser(cred.UserName);
-                _chathub.AddUserData(user);
+                ChatHub.Data.Users.Add(user);
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 Response.StatusCode = (int)HttpStatusCode.OK;
                 return new UserResponseModel("Login was successful", user);
+
             }
         }
 
@@ -90,14 +89,16 @@ namespace ChattingHub.Controllers
         [Route("PostImage")]
         public async Task<string> UploadImage(ProfileImageDataModel imageUploadDataModel)
         {
-            var httpclient = new HttpClient();
-            httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "");
-            httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
-            var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{imageUploadDataModel.Base64ImageData}"));
-            var stringcontent = await response.Content.ReadAsStringAsync();
-            var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
-            ChangeProfilePicture(new ImageUploaderModel(imageUploadDataModel.Uploader, ImgurResponseModel.Data.Link));
-            return ImgurResponseModel.Data.Link;
+            using (var httpclient = new HttpClient())
+            {
+                httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", "");
+                httpclient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "text/plain");
+                var response = await httpclient.PostAsync("https://api.imgur.com/3/Image", new StringContent($"{imageUploadDataModel.Base64ImageData}"));
+                var stringcontent = await response.Content.ReadAsStringAsync();
+                var ImgurResponseModel = JsonConvert.DeserializeObject<ImgurResponseModel>(stringcontent);
+                ChangeProfilePicture(new ImageUploaderModel(imageUploadDataModel.Uploader, ImgurResponseModel.Data.Link));
+                return ImgurResponseModel.Data.Link;
+            }
         }
 
         [HttpPost]
@@ -136,6 +137,12 @@ namespace ChattingHub.Controllers
             }
             return "Code verified.";
         }
+
+
+        [HttpPost]
+        [Route("PostMessagesInterval")]
+        public void SaveMessagesInterval(UnLoadedMessagesIntervalModel unLoadedMessagesInterval) => ChatHub.Data.UnLoadedMessagesIntervalModels.Add(unLoadedMessagesInterval);
+
 
         [HttpPost]
         [Route("PostPassword")]

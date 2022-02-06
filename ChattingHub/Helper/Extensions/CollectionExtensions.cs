@@ -8,14 +8,6 @@ namespace ChattingHub.Helper.Extensions
 {
     public static class CollectionExtensions
     {
-        public static ObservableCollection<TSource> ToObservableCollection<TSource>(this IEnumerable<TSource> collection)
-        {
-            var ObservableCollection = new ObservableCollection<TSource>();
-            foreach(var item in collection)
-            {
-                ObservableCollection.Add(item);
-            }
-            return ObservableCollection;
-        }
+        public static ObservableCollection<TSource> ToObservableCollection<TSource>(this IEnumerable<TSource> collection) => new ObservableCollection<TSource>(collection);
     }
 }
