@@ -41,9 +41,9 @@ namespace ChattingHub.Services
             _recoveryEmails.Add(code, receipent);
         }
 
-        public void VerifyCode(VerificationModel verificationModel)
+        public void VerifyCode(PasswordChangeModel passwordChangeModel)
         {
-            if (!_recoveryEmails.TryGetValue(verificationModel.Code, out var email) || email != verificationModel.Email) throw new VerificationException("Invalid Code");
+            if (!_recoveryEmails.TryGetValue(passwordChangeModel.Code, out var email) || email != passwordChangeModel.Email) throw new VerificationException("Invalid Code");
         }
  
     }

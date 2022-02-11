@@ -70,8 +70,8 @@ namespace DataBaseCMD
         }
         public void UpdatePassword(PasswordChangeModel passwordChangeModel)
         {
-            var parameters = new { NewHashedPassword = EncryptionService.HashPassword(passwordChangeModel.Password), Email = passwordChangeModel.Email };
-            _sqlConnection.Execute(UpdatePasswordStatement, parameters);
+            var parameters2 = new { NewHashedPassword = EncryptionService.HashPassword(passwordChangeModel.Password), Email = passwordChangeModel.Email };
+            _sqlConnection.Execute(UpdatePasswordStatement, parameters2);
         }
 
         public void InsertClient(UserCredentials userCredentials)

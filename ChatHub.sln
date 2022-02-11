@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChattingHub", "ChattingHub\ChattingHub.csproj", "{701869CF-2FB0-4A64-9E55-DCD77D41B874}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBaseCMD", "DataBaseCMD\DataBaseCMD.csproj", "{2FEF80E1-9CE3-4691-A878-8CE2C971087E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataBaseCMD", "DataBaseCMD\DataBaseCMD.csproj", "{2FEF80E1-9CE3-4691-A878-8CE2C971087E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{9A3E38AF-219E-43DD-AC89-A926F27B5691}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{9A3E38AF-219E-43DD-AC89-A926F27B5691}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

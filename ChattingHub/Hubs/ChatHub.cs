@@ -36,11 +36,11 @@ namespace ChattingHub.Hubs
         }
         public void SendPreviousPrivateMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
         {
-            var previousMessages = Data.Messages.Where(x => x.DestinationUser?.DisplayName == unLoadedMessagesInterval.To.DisplayName
-            
+            var previousMessages = Data.Messages.Where(x => x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate
+            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.To.DisplayName
                             || x.User.DisplayName == unLoadedMessagesInterval.To.DisplayName
-                            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.From.DisplayName &&
-            x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate).ToObservableCollection();
+                            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.From.DisplayName).ToObservableCollection();
+
             Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
             Data.UnLoadedMessagesIntervalModels.Remove(unLoadedMessagesInterval);
         }

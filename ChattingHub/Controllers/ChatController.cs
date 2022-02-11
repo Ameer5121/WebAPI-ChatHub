@@ -122,22 +122,6 @@ namespace ChattingHub.Controllers
             return "Email Sent!";
         }
 
-        [HttpPost]
-        [Route("PostCode")]
-        public string VerifyCode(VerificationModel verificationModel)
-        {
-            try
-            {
-                _emailService.VerifyCode(verificationModel);
-            }
-            catch (VerificationException e)
-            {
-                Response.StatusCode = (int)HttpStatusCode.NotFound;
-                return e.Message;
-            }
-            return "Code verified.";
-        }
-
 
         [HttpPost]
         [Route("PostMessagesInterval")]
@@ -146,7 +130,20 @@ namespace ChattingHub.Controllers
 
         [HttpPost]
         [Route("PostPassword")]
-        public void UpdatePassword(PasswordChangeModel passwordChangeModel) => _dBCommands.UpdatePassword(passwordChangeModel);
+        public string UpdatePassword(PasswordChangeModel passwordChangeModel)
+        {
+            try
+            {
+                _emailService.VerifyCode(passwordChangeModel);
+            }
+            catch (VerificationException e)
+            {
+                Response.StatusCode = (int)HttpStatusCode.NotFound;
+                return e.Message;
+            }
+            _dBCommands.UpdatePassword(passwordChangeModel);
+            return "Password Changed!";
+        }
 
         private void ChangeProfilePicture(ImageUploaderModel profileImageUploadDataModel)
         {

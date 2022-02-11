@@ -8,8 +8,10 @@ namespace Models
     {
         public string Password { get; }
         public string Email { get; }
-        public PasswordChangeModel(string password, string email)
+        public int Code { get; }
+        public PasswordChangeModel(int code, string password, string email)
         {
+            Code = code;
             Password = password;
             Email = email;
         }
