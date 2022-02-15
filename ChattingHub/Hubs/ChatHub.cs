@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace ChattingHub.Hubs
             if (currentMessage.DestinationUser != null)
             {
                 hub.Clients.Client(currentMessage.DestinationUser.ConnectionID).SendAsync("ReceiveMessages", Data.Messages);
-                hub.Clients.Client(currentMessage.User.ConnectionID).SendAsync("ReceiveMessages", Data.Messages);
+                hub.Clients.Client(currentMessage.Sender.ConnectionID).SendAsync("ReceiveMessages", Data.Messages);
             }
             else
             {
@@ -32,26 +33,22 @@ namespace ChattingHub.Hubs
             var previousMessages = Data.Messages.Where(x => x.DestinationUser == null &&
             x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate);
             Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
-            Data.UnLoadedMessagesIntervalModels.Remove(unLoadedMessagesInterval);
         }
         public void SendPreviousPrivateMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
         {
-            var previousMessages = Data.Messages.Where(x => x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate
-            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.To.DisplayName
-                            || x.User.DisplayName == unLoadedMessagesInterval.To.DisplayName
-                            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.From.DisplayName).ToObservableCollection();
+            // We want to get messages that are directed to the selected user(User1) and is from (User2) or vice-versa between the time interval that is given.
+            var filteredMessages = Data.Messages.Where(x => x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate);
+            var previousMessages = filteredMessages.Where(
+            x => x.DestinationUser?.DisplayName == unLoadedMessagesInterval.User1.DisplayName
+            && x.Sender?.DisplayName == unLoadedMessagesInterval.User2.DisplayName ||
+                            x.Sender.DisplayName == unLoadedMessagesInterval.User1.DisplayName
+                            && x.DestinationUser?.DisplayName == unLoadedMessagesInterval.User2.DisplayName).ToObservableCollection();
 
             Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
-            Data.UnLoadedMessagesIntervalModels.Remove(unLoadedMessagesInterval);
         }
-        private void SendUsers(IHubContext<ChatHub> hub)
-        {
-            hub.Clients.All.SendAsync("ReceiveUsers", Data.Users);
-        }
-        private void SendUsers()
-        {
-            Clients.Others.SendAsync("ReceiveUsers", Data.Users);
-        }
+        private void SendUsers(IHubContext<ChatHub> hub) => hub.Clients.All.SendAsync("ReceiveUsers", Data.Users);
+        private void SendUsers() => Clients.Others.SendAsync("ReceiveUsers", Data.Users);
+
         /// <summary>
         /// Stores the message data and sends them back out to the connected clients
         /// </summary>
@@ -81,22 +78,53 @@ namespace ChattingHub.Hubs
             var connectedUser = Data.Users.LastOrDefault();
             connectedUser.ConnectionID = Context.ConnectionId;
 
-            //Filter out messages we want to send
-            var messages = Data.Messages.Where
-                (x => x.DestinationUser?.DisplayName == connectedUser.DisplayName
-                || x.DestinationUser != null && x.User.DisplayName == connectedUser.DisplayName || x.DestinationUser == null).ToObservableCollection();
-            if (messages.Count >= 10) messages = messages.Skip(messages.Count - 5).ToObservableCollection();
-
+            //All Intervals the user has
             List<UnLoadedMessagesIntervalModel> unLoadedMessagesIntervals = Data.UnLoadedMessagesIntervalModels;
-              if(Data.UnLoadedMessagesIntervalModels.Count != 0)
+            if (Data.UnLoadedMessagesIntervalModels.Count != 0)
                 unLoadedMessagesIntervals = Data.UnLoadedMessagesIntervalModels.Where
-                (x => x.To?.DisplayName == connectedUser.DisplayName
-                || x.To != null && x.From.DisplayName == connectedUser.DisplayName || x.To == null).ToList();
+                (x => x.User1?.DisplayName == connectedUser.DisplayName
+                || x.User1 != null && x.User2.DisplayName == connectedUser.DisplayName || x.User1 == null).ToList();
 
-
-            Clients.Caller.SendAsync("Connected", new DataModel(messages, Data.Users, unLoadedMessagesIntervals));
+            Clients.Caller.SendAsync("Connected", new DataModel(GetMessages(connectedUser, unLoadedMessagesIntervals), Data.Users, unLoadedMessagesIntervals));
             SendUsers();
             return base.OnConnectedAsync();
+        }
+
+        private ObservableCollection<MessageModel> GetMessages(UserModel currentUser, List<UnLoadedMessagesIntervalModel> unLoadedMessagesIntervals)
+        {
+
+            ObservableCollection<MessageModel> messagesNeeded = new ObservableCollection<MessageModel>();
+            //All messages the user has
+            var messages = Data.Messages.Where
+                (x => x.DestinationUser?.DisplayName == currentUser.DisplayName
+                || x.DestinationUser != null && x.Sender.DisplayName == currentUser.DisplayName || x.DestinationUser == null);
+
+            var publicMessages = messages.TakePublicMessages();
+
+            var publicIntervals = unLoadedMessagesIntervals.Where(x => x.User1 == null || x.User2 == null).ToList();
+            publicIntervals.Sort((x, y) => DateTime.Compare(x.LastDate, y.LastDate));
+
+            UnLoadedMessagesIntervalModel lastInterval = null;
+            AddMessages(publicIntervals, publicMessages);
+
+            foreach (UserModel user in Data.Users.Where(x => x.ConnectionID != currentUser.ConnectionID))
+            {
+                var privateIntervals = unLoadedMessagesIntervals.TakePrivateIntervals(currentUser, user).ToList();
+                var privateMessages = messages.TakePrivateMessages(currentUser, user);
+                AddMessages(privateIntervals, privateMessages);
+            }
+            return messagesNeeded;
+            void AddMessages(List<UnLoadedMessagesIntervalModel> intervals, IEnumerable<MessageModel> messages)
+            {
+                intervals.Sort((x, y) => DateTime.Compare(x.LastDate, y.LastDate));
+                lastInterval = intervals.LastOrDefault();
+                if (lastInterval != null)
+                {
+                    var unLoadedMessages = messages.Where(x => x.MessageDate > lastInterval.LastDate);
+                    foreach (var message in unLoadedMessages) messagesNeeded.Add(message);
+                }
+                else foreach (var message in messages) messagesNeeded.Add(message);
+            }
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
@@ -110,7 +138,7 @@ namespace ChattingHub.Hubs
                     break;
                 }
             }
-            SendUsers();            
+            SendUsers();
             return base.OnDisconnectedAsync(exception);
         }
     }

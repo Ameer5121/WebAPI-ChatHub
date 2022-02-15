@@ -11,7 +11,7 @@ namespace Models
     public class MessageModel
     {
       public byte[] RTFData { get; set; }
-      public UserModel User { get; set; }
+      public UserModel Sender { get; set; }
       public UserModel DestinationUser { get; set; }
       public DateTime MessageDate { get; set; }
     }
