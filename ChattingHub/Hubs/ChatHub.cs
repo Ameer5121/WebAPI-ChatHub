@@ -14,6 +14,7 @@ namespace ChattingHub.Hubs
     public class ChatHub : Hub
     {
         public static DataModel Data { get; } = new DataModel();
+        private static int _userCount = -1;
         private void SendNewMessages(IHubContext<ChatHub> hub)
         {
             var currentMessage = Data.Messages.LastOrDefault();
@@ -75,10 +76,11 @@ namespace ChattingHub.Hubs
 
         public override Task OnConnectedAsync()
         {
-            //HotFix
+            //HotFixes
             TryRemoveIntervalDuplicates();
+            _userCount++;
 
-            var connectedUser = Data.Users.LastOrDefault();
+            var connectedUser = Data.Users[_userCount];
             connectedUser.ConnectionID = Context.ConnectionId;
 
             //All Intervals the user has
@@ -149,8 +151,9 @@ namespace ChattingHub.Hubs
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
+            _userCount--;
             var disconnectedConnection = Context.ConnectionId;
-            foreach (UserModel user in Data.Users)
+            foreach (UserModel user in Data.Users.ToList())
             {
                 if (user.ConnectionID == disconnectedConnection)
                 {
