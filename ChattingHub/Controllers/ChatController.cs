@@ -50,7 +50,6 @@ namespace ChattingHub.Controllers
                 _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
                 Response.StatusCode = (int)HttpStatusCode.OK;
                 return new UserResponseModel("Login was successful", user);
-
             }
         }
 

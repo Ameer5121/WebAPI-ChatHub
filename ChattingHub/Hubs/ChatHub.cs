@@ -75,6 +75,9 @@ namespace ChattingHub.Hubs
 
         public override Task OnConnectedAsync()
         {
+            //HotFix
+            TryRemoveIntervalDuplicates();
+
             var connectedUser = Data.Users.LastOrDefault();
             connectedUser.ConnectionID = Context.ConnectionId;
 
@@ -90,9 +93,26 @@ namespace ChattingHub.Hubs
             return base.OnConnectedAsync();
         }
 
+        private void TryRemoveIntervalDuplicates()
+        {
+            List<UnLoadedMessagesIntervalModel> duplicates = new List<UnLoadedMessagesIntervalModel>();
+            if (Data.UnLoadedMessagesIntervalModels.Count != 0)
+            {
+                for (int x = 0; x <= Data.UnLoadedMessagesIntervalModels.Count - 1; x++)
+                {
+                    UnLoadedMessagesIntervalModel root = Data.UnLoadedMessagesIntervalModels[x];
+                    for (int y = x + 1; y <= Data.UnLoadedMessagesIntervalModels.Count - 1; y++)
+                    {
+                        UnLoadedMessagesIntervalModel model = Data.UnLoadedMessagesIntervalModels[y];
+                        if (root.FirstDate == model.FirstDate && root.LastDate == model.LastDate) duplicates.Add(model);
+                    }
+                }
+                foreach (var duplicate in duplicates) Data.UnLoadedMessagesIntervalModels.Remove(duplicate);
+            }        
+        }
+
         private ObservableCollection<MessageModel> GetMessages(UserModel currentUser, List<UnLoadedMessagesIntervalModel> unLoadedMessagesIntervals)
         {
-
             ObservableCollection<MessageModel> messagesNeeded = new ObservableCollection<MessageModel>();
             //All messages the user has
             var messages = Data.Messages.Where
