@@ -14,6 +14,7 @@ namespace ChattingHub.Hubs
     public class ChatHub : Hub
     {
         public static DataModel Data { get; } = new DataModel();
+        private static List<UserModel> _previouslyConnectedUsers = new List<UserModel>();
         private static int _userCount = -1;
         private void SendNewMessages(IHubContext<ChatHub> hub)
         {
@@ -79,6 +80,8 @@ namespace ChattingHub.Hubs
             //HotFixes
             TryRemoveIntervalDuplicates();
             _userCount++;
+            if (!_previouslyConnectedUsers.Any(x => x.DisplayName == Data.Users[_userCount].DisplayName))
+                _previouslyConnectedUsers.Add(Data.Users[_userCount]);
 
             var connectedUser = Data.Users[_userCount];
             connectedUser.ConnectionID = Context.ConnectionId;
@@ -129,7 +132,7 @@ namespace ChattingHub.Hubs
             UnLoadedMessagesIntervalModel lastInterval = null;
             AddMessages(publicIntervals, publicMessages);
 
-            foreach (UserModel user in Data.Users.Where(x => x.ConnectionID != currentUser.ConnectionID))
+            foreach (UserModel user in _previouslyConnectedUsers.Where(x => x.DisplayName != currentUser.DisplayName))
             {
                 var privateIntervals = unLoadedMessagesIntervals.TakePrivateIntervals(currentUser, user).ToList();
                 var privateMessages = messages.TakePrivateMessages(currentUser, user);
