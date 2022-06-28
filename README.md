@@ -1,7 +1,6 @@
 # WebAPI-ChatHub
 HTTP Server and ChatHub with MySQL database features for https://github.com/Sound932/Chit-Chat.git
 
-For anyone trying to use this, with the chat project. This project won't run without the correct things set up(database, connection string, etc)
 
 # Contains usages of:
 * 2 Projects
@@ -11,3 +10,6 @@ For anyone trying to use this, with the chat project. This project won't run wit
      
 # Third-Party Libraries:
 * Dapper
+
+# Important 
+For anyone trying to use this, with the chat project. This project won't run without the correct things set up(database, connection string, etc)
