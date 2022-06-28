@@ -11,5 +11,5 @@ HTTP Server and ChatHub with MySQL database features for https://github.com/Soun
 # Third-Party Libraries:
 * Dapper
 
-# Important 
-For anyone trying to use this, with the chat project. This project won't run without the correct things set up(database, connection string, etc)
+# Important:
+For anyone trying to use this with the chat project; This project won't run without the correct things set up(database, connection string, etc)
