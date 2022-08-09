@@ -8,6 +8,7 @@ using Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using ChattingHub.Helper.Extensions;
+using DataBaseCMD;
 
 namespace ChattingHub.Hubs
 {
@@ -16,6 +17,13 @@ namespace ChattingHub.Hubs
         public static DataModel Data { get; } = new DataModel();
         private static List<UserModel> _previouslyConnectedUsers = new List<UserModel>();
         private static int _userCount = -1;
+        private DBCommands _dbCommands;
+
+        public ChatHub()
+        {
+            _dbCommands = new DBCommands();
+            LoadIntervalsAndMessages();
+        }
         private void SendNewMessages(IHubContext<ChatHub> hub)
         {
             var currentMessage = Data.Messages.LastOrDefault();
@@ -58,6 +66,7 @@ namespace ChattingHub.Hubs
         /// <param name="hub"></param>
         public void AddMessageData(MessageModel data, IHubContext<ChatHub> hub)
         {
+            SaveMessage(data);
             Data.Messages.Add(data);
             SendNewMessages(hub);
         }
@@ -123,7 +132,7 @@ namespace ChattingHub.Hubs
             var messages = Data.Messages.Where
                 (x => x.DestinationUser?.DisplayName == currentUser.DisplayName
                 || x.DestinationUser != null && x.Sender.DisplayName == currentUser.DisplayName || x.DestinationUser == null);
-
+             
             var publicMessages = messages.TakePublicMessages();
 
             var publicIntervals = unLoadedMessagesIntervals.Where(x => x.User1 == null || x.User2 == null).ToList();
@@ -152,6 +161,24 @@ namespace ChattingHub.Hubs
             }
         }
 
+        private void LoadIntervalsAndMessages()
+        {
+          Data.Messages = _dbCommands.GetMessagesAfterLastInterval().ToObservableCollection();
+          Data.UnLoadedMessagesIntervalModels = _dbCommands.GetFirst5PublicIntervals();
+        }
+
+        private void SaveMessage(MessageModel message)
+        {
+            _dbCommands.InsertMessage(message);
+        }
+
+        //Called when interval is sent from the user.
+        public void ReduceMessages()
+        {
+           var newData = Data.Messages.Skip(10);
+           Data.Messages = newData.ToObservableCollection();
+        }
+
         public override Task OnDisconnectedAsync(Exception exception)
         {
             _userCount--;
@@ -167,5 +194,7 @@ namespace ChattingHub.Hubs
             SendUsers();
             return base.OnDisconnectedAsync(exception);
         }
+
+        
     }
 }

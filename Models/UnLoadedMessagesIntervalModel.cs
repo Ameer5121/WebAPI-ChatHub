@@ -13,7 +13,7 @@ namespace Models
         public UserModel User2 { get; }
 
         [JsonConstructor]
-        public UnLoadedMessagesIntervalModel(DateTime firstDate, DateTime lastDate, UserModel user1, UserModel user2)
+        public UnLoadedMessagesIntervalModel(DateTime firstDate, DateTime lastDate, UserModel user1 = null, UserModel user2 = null)
         {
             FirstDate = firstDate;
             LastDate = lastDate;

@@ -18,10 +18,15 @@ namespace DataBaseCMD
         private string SELECTUserNameStatement => $"SELECT username FROM clients WHERE username = @UserName";
         private string SELECTUserStatement => $"SELECT displayname, profilepicture FROM clients WHERE username = @UserName";
         private string INSERTClientStatement => $"INSERT INTO clients (client_id,username,hashedpassword,displayname,email,profilepicture) VALUE(Default, @UserName, @Password, @DisplayName, @Email, @ProfilePicture)";
-
         private string UpdatePictureStatement => $"UPDATE clients SET profilepicture = @ProfilePicture WHERE displayname = @DisplayName ";
         private string UpdateNameStatement => "UPDATE clients SET displayname = @NewDisplayName WHERE displayname = @CurrentDisplayName";
         private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NewHashedPassword WHERE email = @Email";
+        private string InsertMessageStatement => "Insert into messages VALUE((SELECT username from clients WHERE displayname = @Sender), " +
+            "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
+        private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";
+        private string GetPublicMessagesAfterLastIntervalStatement => "SELECT * FROM messages where date > (SELECT LastInterval FROM clientinformation.messageintervals order by LastInterval desc limit 1)";
+        private string GetFirst5PublicIntervalsStatement => "SELECT * FROM messageintervals as MI where" +
+            "(SELECT date from messages where date between MI.FirstInterval and MI.LastInterval and receiver is null limit 1) limit 5";
 
 
         public bool CredentialsExist(UserCredentials userCredentials)
@@ -33,7 +38,7 @@ namespace DataBaseCMD
                 connection.Open();
                 var hashedPassword = connection.ExecuteScalar(SELECTPasswordStatement, parameters);
                 return hashedPassword == null ? false : EncryptionService.VerifyPassword(userCredentials.DecryptedPassword, hashedPassword as string);
-            }          
+            }
         }
 
         public bool EmailExists(string email)
@@ -43,7 +48,7 @@ namespace DataBaseCMD
             {
                 using (var user = connection.ExecuteReader(SELECTEmailStatement, parameters))
                     return user.Read();
-            }    
+            }
         }
         public bool UserNameExists(string userName)
         {
@@ -52,7 +57,7 @@ namespace DataBaseCMD
             {
                 using (var user = connection.ExecuteReader(SELECTUserNameStatement, parameters))
                     return user.Read();
-            }     
+            }
         }
 
         public UserModel GetUser(string userName)
@@ -60,9 +65,9 @@ namespace DataBaseCMD
             var parameters = new { UserName = userName };
             using (var connection = new MySqlConnection(_connectionString))
             {
-                var user = connection.Query<UserModel>(SELECTUserStatement, parameters).AsList();
-                return user[0];
-            }     
+                var user = connection.QueryFirst<UserModel>(SELECTUserStatement, parameters);
+                return user;
+            }
         }
 
         public void UpdateProfilePicture(ImageUploaderModel profileImageDataModel)
@@ -98,6 +103,64 @@ namespace DataBaseCMD
             using (var connection = new MySqlConnection(_connectionString))
                 connection.Execute(INSERTClientStatement, parameters);
 
+        }
+
+        public void InsertMessage(MessageModel message)
+        {
+            var parameters = new
+            {
+                Message = message.RTFData,
+                Date = message.MessageDate,
+                Sender = message.Sender.DisplayName,
+                Receiver = message.DestinationUser?.DisplayName ?? null,
+            };
+            using (var connection = new MySqlConnection(_connectionString))
+                connection.Execute(InsertMessageStatement, parameters);
+        }
+
+        public void InsertInterval(UnLoadedMessagesIntervalModel message)
+        {
+            var parameters = new
+            {
+                FirstInterval = message.FirstDate,
+                LastInterval = message.LastDate,
+            };
+            using (var connection = new MySqlConnection(_connectionString))
+                connection.Execute(InsertMessageIntervalsStatement, parameters);
+        }
+
+        public List<MessageModel> GetMessagesAfterLastInterval()
+        {
+            List<MessageModel> messages = new List<MessageModel>();
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var data = connection.ExecuteReader(GetPublicMessagesAfterLastIntervalStatement);
+                while (data.Read())
+                {
+                    UserModel sender = GetUser(data.GetString(0));
+                    byte[] messageData = data["message"] as byte[];
+                    DateTime messageDate = (DateTime)data["date"];
+                    messages.Add(new MessageModel(messageData, sender, null, messageDate));
+                }
+
+            }
+            return messages;
+        }
+
+        public List<UnLoadedMessagesIntervalModel> GetFirst5PublicIntervals()
+        {
+            List<UnLoadedMessagesIntervalModel> intervals = new List<UnLoadedMessagesIntervalModel>();
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var data = connection.ExecuteReader(GetFirst5PublicIntervalsStatement);
+                while (data.Read())
+                {
+                    DateTime firstInterval = (DateTime)data["FirstInterval"];
+                    DateTime LastInterval = (DateTime)data["LastInterval"];
+                    intervals.Add(new UnLoadedMessagesIntervalModel(firstInterval, LastInterval));
+                }
+            }
+            return intervals;
         }
 
     }

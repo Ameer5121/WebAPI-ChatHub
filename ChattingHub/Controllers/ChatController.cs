@@ -124,7 +124,12 @@ namespace ChattingHub.Controllers
 
         [HttpPost]
         [Route("PostMessagesInterval")]
-        public void SaveMessagesInterval(UnLoadedMessagesIntervalModel unLoadedMessagesInterval) => ChatHub.Data.UnLoadedMessagesIntervalModels.Add(unLoadedMessagesInterval);
+        public void SaveMessagesInterval(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
+        {
+            ChatHub.Data.UnLoadedMessagesIntervalModels.Add(unLoadedMessagesInterval);
+            _chathub.ReduceMessages();
+            _dBCommands.InsertInterval(unLoadedMessagesInterval);
+        }
 
 
         [HttpPost]

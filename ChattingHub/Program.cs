@@ -13,8 +13,7 @@ namespace ChattingHub
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
-            
+            CreateHostBuilder(args).Build().Run();            
         }
      
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -22,6 +21,7 @@ namespace ChattingHub
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    webBuilder.UseUrls("https://0.0.0.0:5001");
                 });
     }
 }
