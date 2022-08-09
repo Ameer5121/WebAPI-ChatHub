@@ -23,8 +23,10 @@ namespace DataBaseCMD
         private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NewHashedPassword WHERE email = @Email";
         private string InsertMessageStatement => "Insert into messages VALUE((SELECT username from clients WHERE displayname = @Sender), " +
             "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
-        private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";
+        private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";    
         private string GetPublicMessagesAfterLastIntervalStatement => "SELECT * FROM messages where date > (SELECT LastInterval FROM clientinformation.messageintervals order by LastInterval desc limit 1)";
+        private string GetPublicMessagesIntervalStatement => "SELECT * FROM messages where date between @FirstInterval and @LastInterval";
+
         private string GetFirst5PublicIntervalsStatement => "SELECT * FROM messageintervals as MI where" +
             "(SELECT date from messages where date between MI.FirstInterval and MI.LastInterval and receiver is null limit 1) limit 5";
 
@@ -129,12 +131,31 @@ namespace DataBaseCMD
                 connection.Execute(InsertMessageIntervalsStatement, parameters);
         }
 
-        public List<MessageModel> GetMessagesAfterLastInterval()
+        public List<MessageModel> GetPublicMessagesAfterLastInterval()
         {
             List<MessageModel> messages = new List<MessageModel>();
             using (var connection = new MySqlConnection(_connectionString))
             {
                 var data = connection.ExecuteReader(GetPublicMessagesAfterLastIntervalStatement);
+                while (data.Read())
+                {
+                    UserModel sender = GetUser(data.GetString(0));
+                    byte[] messageData = data["message"] as byte[];
+                    DateTime messageDate = (DateTime)data["date"];
+                    messages.Add(new MessageModel(messageData, sender, null, messageDate));
+                }
+
+            }
+            return messages;
+        }
+
+        public List<MessageModel> GetMessagesAfterInterval(UnLoadedMessagesIntervalModel unLoadedMessagesIntervalModel)
+        {
+            List<MessageModel> messages = new List<MessageModel>();
+            var paramteres = new { FirstInterval = unLoadedMessagesIntervalModel.FirstDate, LastInterval = unLoadedMessagesIntervalModel.LastDate };
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var data = connection.ExecuteReader(GetPublicMessagesIntervalStatement, paramteres);
                 while (data.Read())
                 {
                     UserModel sender = GetUser(data.GetString(0));

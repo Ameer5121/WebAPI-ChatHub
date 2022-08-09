@@ -40,8 +40,7 @@ namespace ChattingHub.Hubs
 
         public void SendPreviousPublicMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
         {
-            var previousMessages = Data.Messages.Where(x => x.DestinationUser == null &&
-            x.MessageDate >= unLoadedMessagesInterval.FirstDate && x.MessageDate <= unLoadedMessagesInterval.LastDate);
+            var previousMessages = _dbCommands.GetMessagesAfterInterval(unLoadedMessagesInterval);
             Clients.Caller.SendAsync("LoadPreviousMessages", previousMessages);
         }
         public void SendPreviousPrivateMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
@@ -163,7 +162,7 @@ namespace ChattingHub.Hubs
 
         private void LoadIntervalsAndMessages()
         {
-          Data.Messages = _dbCommands.GetMessagesAfterLastInterval().ToObservableCollection();
+          Data.Messages = _dbCommands.GetPublicMessagesAfterLastInterval().ToObservableCollection();
           Data.UnLoadedMessagesIntervalModels = _dbCommands.GetFirst5PublicIntervals();
         }
 
