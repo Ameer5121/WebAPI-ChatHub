@@ -162,7 +162,7 @@ namespace ChattingHub.Hubs
 
         private void LoadIntervalsAndMessages()
         {
-          Data.Messages = _dbCommands.GetPublicMessagesAfterLastInterval().ToObservableCollection();
+          Data.Messages = _dbCommands.GetPublicMessages().ToObservableCollection();
           Data.UnLoadedMessagesIntervalModels = _dbCommands.GetFirst5PublicIntervals();
         }
 
