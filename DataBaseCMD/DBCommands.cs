@@ -25,7 +25,7 @@ namespace DataBaseCMD
             "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
         private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";
         private string GetPublicMessagesAfterLastIntervalStatement => "SELECT * FROM messages where date > (SELECT LastInterval FROM clientinformation.messageintervals order by LastInterval desc limit 1)";
-        private string GetPublicMessagesStatement => "SELECT * FROM messages";
+        private string GetPublicMessagesStatement => "SELECT * FROM messages where receiver is null";
         private string GetPublicMessagesIntervalStatement => "SELECT * FROM messages where date between @FirstInterval and @LastInterval";
 
         private string GetFirst5PublicIntervalsStatement => "SELECT * FROM messageintervals as MI where" +
