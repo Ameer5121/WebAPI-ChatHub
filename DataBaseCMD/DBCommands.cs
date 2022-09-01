@@ -16,11 +16,12 @@ namespace DataBaseCMD
         private string SELECTPasswordStatement => $"SELECT hashedpassword FROM clients WHERE username = @UserName";
         private string SELECTEmailStatement => $"SELECT email FROM clients WHERE email = @Email";
         private string SELECTUserNameStatement => $"SELECT username FROM clients WHERE username = @UserName";
+        private string SELECTDisplayNametatement => $"SELECT displayname FROM clients WHERE displayname = @DisplayName";
         private string SELECTUserStatement => $"SELECT displayname, profilepicture FROM clients WHERE username = @UserName";
         private string INSERTClientStatement => $"INSERT INTO clients (client_id,username,hashedpassword,displayname,email,profilepicture) VALUE(Default, @UserName, @Password, @DisplayName, @Email, @ProfilePicture)";
         private string UpdatePictureStatement => $"UPDATE clients SET profilepicture = @ProfilePicture WHERE displayname = @DisplayName ";
         private string UpdateNameStatement => "UPDATE clients SET displayname = @NewDisplayName WHERE displayname = @CurrentDisplayName";
-        private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NewHashedPassword WHERE email = @Email";
+        private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NmewHashedPassword WHERE email = @Email";
         private string InsertMessageStatement => "Insert into messages VALUE((SELECT username from clients WHERE displayname = @Sender), " +
             "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
         private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";
@@ -56,6 +57,15 @@ namespace DataBaseCMD
         public bool UserNameExists(string userName)
         {
             var parameters = new { UserName = userName };
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                using (var user = connection.ExecuteReader(SELECTUserNameStatement, parameters))
+                    return user.Read();
+            }
+        }
+        public bool DisplayNameExists(string displayName)
+        {
+            var parameters = new { DisplayName = displayName };
             using (var connection = new MySqlConnection(_connectionString))
             {
                 using (var user = connection.ExecuteReader(SELECTUserNameStatement, parameters))

@@ -59,6 +59,7 @@ namespace ChattingHub.Controllers
         {
             var emailExists = _dBCommands.EmailExists(cred.Email);
             var userNameExists = _dBCommands.UserNameExists(cred.UserName);
+            var DisplayNameExists = _dBCommands.DisplayNameExists(cred.DisplayName);
             if (emailExists)
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -68,6 +69,11 @@ namespace ChattingHub.Controllers
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return "UserName already exists";
+            }
+            else if (DisplayNameExists)
+            {
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return "User with that DisplayName already exists";
             }
             _dBCommands.InsertClient(cred);
             _logger.LogInformation($"User has registered an account." +
@@ -102,10 +108,16 @@ namespace ChattingHub.Controllers
 
         [HttpPost]
         [Route("PostName")]
-        public void UpdateName(NameChangeModel nameChangeModel)
+        public string UpdateName(NameChangeModel nameChangeModel)
         {
+            if (_dBCommands.DisplayNameExists(nameChangeModel.User.DisplayName))
+            {
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return "User with that DisplayName already exists";
+            }
             _dBCommands.UpdateDisplayName(nameChangeModel);
             _chathub.UpdateName(nameChangeModel, _hubContext);
+            return "Name Successfully changed";
         }
 
         [HttpPost]
