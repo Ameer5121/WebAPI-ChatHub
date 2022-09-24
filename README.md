@@ -29,3 +29,6 @@ In https://github.com/Sound932/WebAPI-ChatHub/blob/283e8cebc25549e83acd84c6ecc1b
 And in https://github.com/Sound932/WebAPI-ChatHub/blob/283e8cebc25549e83acd84c6ecc1bb1f097ea4cf/ChattingHub/Services/EmailService.cs#L30 You also type your email.
 
 
+
+# Database structure:
+https://www.mediafire.com/file/wuqnlu5ifweaxwz/DBStructure.rar/file
