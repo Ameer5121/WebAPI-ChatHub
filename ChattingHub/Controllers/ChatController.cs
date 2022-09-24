@@ -104,7 +104,7 @@ namespace ChattingHub.Controllers
                 ChangeProfilePicture(new ImageUploaderModel(imageUploadDataModel.Uploader, ImgurResponseModel.Data.Link));
                 return ImgurResponseModel.Data.Link;
             }
-        }
+        } 
 
         [HttpPost]
         [Route("PostName")]

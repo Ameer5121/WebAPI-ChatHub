@@ -45,6 +45,6 @@ namespace ChattingHub.Services
         {
             if (!_recoveryEmails.TryGetValue(passwordChangeModel.Code, out var email) || email != passwordChangeModel.Email) throw new VerificationException("Invalid Code");
         }
-
+ 
     }
 }

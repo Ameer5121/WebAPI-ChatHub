@@ -68,7 +68,7 @@ namespace DataBaseCMD
             var parameters = new { DisplayName = displayName };
             using (var connection = new MySqlConnection(_connectionString))
             {
-                using (var user = connection.ExecuteReader(SELECTUserNameStatement, parameters))
+                using (var user = connection.ExecuteReader(SELECTDisplayNametatement, parameters))
                     return user.Read();
             }
         }
