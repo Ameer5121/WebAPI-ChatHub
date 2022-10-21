@@ -24,6 +24,7 @@ namespace DataBaseCMD
         private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NmewHashedPassword WHERE email = @Email";
         private string InsertMessageStatement => "Insert into messages VALUE((SELECT username from clients WHERE displayname = @Sender), " +
             "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
+        private string DeleteMessageStatement => "DELETE from messages where date = @MessageDate";
         private string InsertMessageIntervalsStatement => "Insert into messageIntervals VALUE(@FirstInterval, @LastInterval)";
         private string GetPublicMessagesAfterLastIntervalStatement => "SELECT * FROM messages where date > (SELECT LastInterval FROM clientinformation.messageintervals order by LastInterval desc limit 1)";
         private string GetPublicMessagesStatement => "SELECT * FROM messages where receiver is null";
@@ -129,6 +130,16 @@ namespace DataBaseCMD
             };
             using (var connection = new MySqlConnection(_connectionString))
                 connection.Execute(InsertMessageStatement, parameters);
+        }
+
+        public void DeleteMessage(MessageModel message)
+        {
+            var parameters = new
+            {
+                MessageDate = message.MessageDate,
+            };
+            using (var connection = new MySqlConnection(_connectionString))
+                connection.Execute(DeleteMessageStatement, parameters);
         }
 
         public void InsertInterval(UnLoadedMessagesIntervalModel message)

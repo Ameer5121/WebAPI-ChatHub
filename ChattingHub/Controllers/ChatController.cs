@@ -90,6 +90,15 @@ namespace ChattingHub.Controllers
             _chathub.AddMessageData(message, _hubContext);
         }
 
+        [HttpDelete]
+        [Route("DeleteMessage")]
+        public void DeleteMessage(MessageModel message)
+        {
+            _dBCommands.DeleteMessage(message);
+            ChatHub.Data.Messages.Remove(message);
+            _chathub.DeleteMessage(_hubContext, message);
+        }
+
         [HttpPost]
         [Route("PostImage")]
         public async Task<string> UploadImage(ProfileImageDataModel imageUploadDataModel)
@@ -110,7 +119,7 @@ namespace ChattingHub.Controllers
         [Route("PostName")]
         public string UpdateName(NameChangeModel nameChangeModel)
         {
-            if (_dBCommands.DisplayNameExists(nameChangeModel.User.DisplayName))
+            if (_dBCommands.DisplayNameExists(nameChangeModel.NewName))
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return "User with that DisplayName already exists";

@@ -24,7 +24,7 @@ namespace ChattingHub.Hubs
             _dbCommands = new DBCommands();
             LoadIntervalsAndMessages();
         }
-        private void SendNewMessages(IHubContext<ChatHub> hub)
+        public void SendNewMessages(IHubContext<ChatHub> hub)
         {
             var currentMessage = Data.Messages.LastOrDefault();
             if (currentMessage.DestinationUser != null)
@@ -37,6 +37,9 @@ namespace ChattingHub.Hubs
                 hub.Clients.All.SendAsync("ReceiveMessages", Data.Messages);
             }
         }
+
+        public void DeleteMessage(IHubContext<ChatHub> hub, MessageModel message) => hub.Clients.All.SendAsync("DeleteMessage", message);
+
 
         public void SendPreviousPublicMessages(UnLoadedMessagesIntervalModel unLoadedMessagesInterval)
         {
