@@ -17,12 +17,15 @@ namespace ChattingHub.Hubs
         public static DataModel Data { get; } = new DataModel();
         private static List<UserModel> _previouslyConnectedUsers = new List<UserModel>();
         private static int _userCount = -1;
-        private DBCommands _dbCommands;
+        private static DBCommands _dbCommands;
 
         public ChatHub()
         {
-            _dbCommands = new DBCommands();
-            LoadIntervalsAndMessages();
+            if (Data.Messages.Count == 0)
+            {
+                _dbCommands = new DBCommands();
+                LoadIntervalsAndMessages();
+            }
         }
         public void SendNewMessages(IHubContext<ChatHub> hub)
         {
@@ -124,7 +127,7 @@ namespace ChattingHub.Hubs
                     }
                 }
                 foreach (var duplicate in duplicates) Data.UnLoadedMessagesIntervalModels.Remove(duplicate);
-            }        
+            }
         }
 
         private ObservableCollection<MessageModel> GetMessages(UserModel currentUser, List<UnLoadedMessagesIntervalModel> unLoadedMessagesIntervals)
@@ -134,7 +137,8 @@ namespace ChattingHub.Hubs
             var messages = Data.Messages.Where
                 (x => x.DestinationUser?.DisplayName == currentUser.DisplayName
                 || x.DestinationUser != null && x.Sender.DisplayName == currentUser.DisplayName || x.DestinationUser == null);
-             
+
+
             var publicMessages = messages.TakePublicMessages();
 
             var publicIntervals = unLoadedMessagesIntervals.Where(x => x.User1 == null || x.User2 == null).ToList();
@@ -165,8 +169,8 @@ namespace ChattingHub.Hubs
 
         private void LoadIntervalsAndMessages()
         {
-          Data.Messages = _dbCommands.GetPublicMessages().ToObservableCollection();
-          Data.UnLoadedMessagesIntervalModels = _dbCommands.GetFirst5PublicIntervals();
+            Data.Messages = _dbCommands.GetPublicMessages().ToObservableCollection();
+            Data.UnLoadedMessagesIntervalModels = _dbCommands.GetFirst5PublicIntervals();
         }
 
         private void SaveMessage(MessageModel message)
@@ -177,8 +181,8 @@ namespace ChattingHub.Hubs
         //Called when interval is sent from the user.
         public void ReduceMessages()
         {
-           var newData = Data.Messages.Skip(10);
-           Data.Messages = newData.ToObservableCollection();
+            var newData = Data.Messages.Skip(10);
+            Data.Messages = newData.ToObservableCollection();
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
@@ -197,6 +201,6 @@ namespace ChattingHub.Hubs
             return base.OnDisconnectedAsync(exception);
         }
 
-        
+
     }
 }

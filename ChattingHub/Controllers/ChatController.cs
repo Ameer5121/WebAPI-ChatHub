@@ -95,7 +95,8 @@ namespace ChattingHub.Controllers
         public void DeleteMessage(MessageModel message)
         {
             _dBCommands.DeleteMessage(message);
-            ChatHub.Data.Messages.Remove(message);
+            var messageToDelete = ChatHub.Data.Messages.First(x => x.MessageDate == message.MessageDate);
+            ChatHub.Data.Messages.Remove(messageToDelete);
             _chathub.DeleteMessage(_hubContext, message);
         }
 
