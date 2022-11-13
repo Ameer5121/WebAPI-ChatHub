@@ -21,7 +21,7 @@ namespace DataBaseCMD
         private string INSERTClientStatement => $"INSERT INTO clients (client_id,username,hashedpassword,displayname,email,profilepicture) VALUE(Default, @UserName, @Password, @DisplayName, @Email, @ProfilePicture)";
         private string UpdatePictureStatement => $"UPDATE clients SET profilepicture = @ProfilePicture WHERE displayname = @DisplayName ";
         private string UpdateNameStatement => "UPDATE clients SET displayname = @NewDisplayName WHERE displayname = @CurrentDisplayName";
-        private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NmewHashedPassword WHERE email = @Email";
+        private string UpdatePasswordStatement => "UPDATE clients SET hashedpassword = @NewHashedPassword WHERE email = @Email";
         private string InsertMessageStatement => "Insert into messages VALUE((SELECT username from clients WHERE displayname = @Sender), " +
             "(SELECT username from clients WHERE displayname = @Receiver), @Message, @Date)";
         private string DeleteMessageStatement => "DELETE from messages where date = @MessageDate";
