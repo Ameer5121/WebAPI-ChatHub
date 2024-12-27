@@ -9,6 +9,10 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using ChattingHub.Helper.Extensions;
 using DataBaseCMD;
+using System.Net.Sockets;
+using System.Net;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace ChattingHub.Hubs
 {
@@ -18,6 +22,9 @@ namespace ChattingHub.Hubs
         private static List<UserModel> _previouslyConnectedUsers = new List<UserModel>();
         private static int _userCount = -1;
         private static DBCommands _dbCommands;
+
+        private static UdpClient client = new UdpClient(60015);
+        private static IPEndPoint ip = new IPEndPoint(IPAddress.Any, 60015);
 
         public ChatHub()
         {
@@ -41,6 +48,21 @@ namespace ChattingHub.Hubs
             }
         }
 
+        public void RunVoiceChatServer(IHubContext<ChatHub> hub)
+        {
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    var bytes = client.Receive(ref ip);
+                    var jsonData = Encoding.UTF8.GetString(bytes);
+                    var voiceChatData = JsonConvert.DeserializeObject<VoiceChatData>(jsonData);
+
+                    var clientProxy = hub.Clients.AllExcept(voiceChatData.ConnectionID);
+                    clientProxy.SendAsync("ReceiveVoiceData", voiceChatData.Data);
+                }
+            });
+        }
         public void DeleteMessage(IHubContext<ChatHub> hub, MessageModel message) => hub.Clients.All.SendAsync("DeleteMessage", message);
 
 
