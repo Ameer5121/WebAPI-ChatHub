@@ -31,4 +31,4 @@ And in https://github.com/Sound932/WebAPI-ChatHub/blob/283e8cebc25549e83acd84c6e
 
 
 # Database structure:
-https://www.mediafire.com/file/t5sz9ufqjkqorc7/DBStructure.rar/file
+https://www.mediafire.com/file/hj1tenjwadd9mny/DBStructure.rar/file
