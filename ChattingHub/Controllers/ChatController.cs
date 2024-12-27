@@ -26,11 +26,17 @@ namespace ChattingHub.Controllers
         private static DBCommands _dBCommands = new DBCommands();
         private IHubContext<ChatHub> _hubContext;
         private EmailService _emailService;
+        private static bool vcOn = false;
         public ChatController(ILogger<ChatController> logger, IHubContext<ChatHub> hubContext, EmailService emailService)
         {
             _logger = logger;
             _hubContext = hubContext;
             _emailService = emailService;
+            if (!vcOn)
+            {
+                _chathub.RunVoiceChatServer(hubContext);
+                vcOn = true;
+            }
         }
 
         [HttpPost]
@@ -169,6 +175,20 @@ namespace ChattingHub.Controllers
             }
             _dBCommands.UpdatePassword(passwordChangeModel);
             return "Password Changed!";
+        }
+
+        [HttpPost]
+        [Route("ConnectToVoiceChat")]
+        public async Task ConnectToVoiceChat(UserModel userModel)
+        {
+            await _hubContext.Clients.All.SendAsync("AddVoiceChatUser", userModel);
+        }
+
+        [HttpPost]
+        [Route("DisconnectFromVoiceChat")]
+        public void DisconnectFromVoiceChat(UserModel userModel)
+        {
+
         }
 
         private void ChangeProfilePicture(ImageUploaderModel profileImageUploadDataModel)
