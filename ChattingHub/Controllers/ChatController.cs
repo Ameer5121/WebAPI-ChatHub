@@ -53,7 +53,8 @@ namespace ChattingHub.Controllers
             {
                 var user = _dBCommands.GetUser(cred.UserName);
                 ChatHub.Data.Users.Add(user);
-                _logger.LogInformation($"User {user.DisplayName} has logged in to the server.");
+                _logger.LogInformation($"User {user.DisplayName} has logged in to the server. " +
+                    $"    \n Time: {DateTime.Now}");
                 Response.StatusCode = (int)HttpStatusCode.OK;
                 return new UserResponseModel("Login was successful", user);
             }
@@ -120,7 +121,7 @@ namespace ChattingHub.Controllers
                 ChangeProfilePicture(new ImageUploaderModel(imageUploadDataModel.Uploader, ImgurResponseModel.Data.Link));
                 return ImgurResponseModel.Data.Link;
             }
-        } 
+        }
 
         [HttpPost]
         [Route("PostName")]
@@ -186,9 +187,9 @@ namespace ChattingHub.Controllers
 
         [HttpPost]
         [Route("DisconnectFromVoiceChat")]
-        public void DisconnectFromVoiceChat(UserModel userModel)
+        public async Task DisconnectFromVoiceChat(UserModel userModel)
         {
-
+            await _hubContext.Clients.All.SendAsync("RemoveVoiceChatUser", userModel);
         }
 
         private void ChangeProfilePicture(ImageUploaderModel profileImageUploadDataModel)
